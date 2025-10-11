@@ -1,11 +1,13 @@
 package gm.tienda_libros.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -13,15 +15,34 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Table(name = "Libros")
 public class Libro extends BaseEntity{
-    String nombre;
-    String autor;
-    Double precio;
-    Integer cantidad;
-    String descripcion;
-    LocalDate fechaPublicacion;
+    @Column(nullable = false, unique = true, length = 20)
+    private String isbn;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, length = 3)
+    private String codMoneda;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal precio;
+
+    @Column(nullable = false)
+    @Min(0)
+    private Integer stock;
+
+    @Column(nullable = false, length = 250)
+    private String descripcion;
+
+    @Column(nullable = false)
+    private LocalDate fechaPublicacion;
+
+    @Column(name = "codGeneroLiterario", nullable = false, length = 3)
+    private String codGeneroLiterario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idCategoria", referencedColumnName = "id", insertable = false, updatable = false)
-    private Categoria categoria;
+    @JoinColumn(name = "codGeneroLiterario", referencedColumnName = "codigo", insertable = false, updatable = false)
+    private GeneroLiterario generoLiterario;
 }
