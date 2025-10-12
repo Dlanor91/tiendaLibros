@@ -2,10 +2,13 @@ package gm.tienda_libros.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -18,4 +21,7 @@ public class Autor extends BaseEntity{
 
     @Column(nullable = false, length = 50)
     private String apellidos;
+
+    @ManyToMany(mappedBy = "autores")
+    private List<Libro> libros;
 }

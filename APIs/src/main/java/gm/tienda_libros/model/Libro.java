@@ -9,6 +9,7 @@ import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Data
@@ -45,4 +46,13 @@ public class Libro extends BaseEntity{
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "codGeneroLiterario", referencedColumnName = "codigo", insertable = false, updatable = false)
     private GeneroLiterario generoLiterario;
+
+    //Relacion Muchos a Muchos
+    @ManyToMany
+    @JoinTable(
+            name = "LibroAutor",
+            joinColumns = @JoinColumn(name = "idLibro"),
+            inverseJoinColumns = @JoinColumn(name = "idAutor")
+    )
+    private List<Autor> autores;
 }
