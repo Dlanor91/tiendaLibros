@@ -2,7 +2,7 @@
 
 Sistema que permitira la gestion y venta de libros de una libreria
 
-##MER
+## MER
 Cliente (1)───(N) Venta (1)───(N) DetalleVenta (N)───(1) Libro (N)───(N) Autor
                                                        │
                                                        └──(1) GeneroLiterario
@@ -17,7 +17,7 @@ Cliente (1)───(N) Venta (1)───(N) DetalleVenta (N)───(1) Libro
 | **DetalleVenta**     | Relación entre ventas y libros vendidos, con precios e importes.                |
 | **LibroAutor**       | Relación N:M entre libros y autores.                                            |
 
-##Test
+## Test
 src/test/java/gm/tienda_libros/
 ├── validationtest/
 │    └── ClienteValidacionTest.java     🧠 Unitario
