@@ -15,16 +15,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table(name = "Clientes")
 public class Cliente  extends  BaseEntity{
-    @NotBlank
+    @NotBlank(message = "El nombre no puede estar vacío")
     @Column(nullable = false, length = 50)
     private String nombre;
 
-    @NotBlank
-    @Email
+    @NotBlank(message = "El email no puede estar vacío")
+    @Email(message = "El email debe tener un formato válido")
     @Column(nullable = false, unique = true, length = 50)
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "El telefono no puede estar vacío")
     @Column(nullable = false, length = 50)
     private String telefono;
 }

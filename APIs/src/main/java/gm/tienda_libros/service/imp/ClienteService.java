@@ -4,6 +4,7 @@ import gm.tienda_libros.model.Cliente;
 import gm.tienda_libros.repository.ClienteRepository;
 import gm.tienda_libros.service.IClienteService;
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class ClienteService implements IClienteService {
             throw new IllegalArgumentException("El ID de cliente debe ser mayor que cero.");
         }
 
-        return clienteRepository.findById(id).orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + id));
+        return clienteRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado con ID: " + id));
     }
 
     @Override
@@ -48,11 +49,6 @@ public class ClienteService implements IClienteService {
     public Cliente actualizarCliente(Integer id, Cliente cliente) {
         if(cliente == null){
             throw new IllegalArgumentException("El cliente no puede ser null");
-        }
-
-        Optional<Cliente> existeClienteConEmail = clienteRepository.findByEmail(cliente.getEmail());
-        if(existeClienteConEmail.isPresent()){
-            throw new EntityExistsException("Ya existe un cliente con el email: " + cliente.getEmail());
         }
 
         Cliente clienteExistente  = obtenerClientePorId(id);

@@ -32,6 +32,15 @@ class ClienteControllerTest {
     //---------- Crear ----------//
     @Test
     void debeRetornar201AlCrearClienteValido() throws Exception {
+        Cliente clienteGuardado = new Cliente();
+        clienteGuardado.setId(1);
+        clienteGuardado.setNombre("Juan");
+        clienteGuardado.setEmail("juan@test.com");
+        clienteGuardado.setTelefono("099123456");
+
+        when(clienteService.registrarCliente(any(Cliente.class)))
+                .thenReturn(clienteGuardado);
+
         String json = """
             {"nombre": "Juan", "email": "juan@test.com", "telefono": "099123456"}
         """;
@@ -39,7 +48,9 @@ class ClienteControllerTest {
         mockMvc.perform(post("/api/clientes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/clientes/1")) // opcional
+                .andExpect(jsonPath("$.nombre").value("Juan"));
     }
 
     @Test
@@ -91,6 +102,29 @@ class ClienteControllerTest {
                         .content(json))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("no encontrado")));
+    }
+
+    @Test
+    void debeRetornar409AlActualizarClienteConEmailExistente() throws Exception {
+        // Datos que se quieren actualizar
+        Cliente cambios = new Cliente();
+        cambios.setNombre("Juan Actualizado");
+        cambios.setEmail("emailexistente@test.com"); // Email que ya existe
+        cambios.setTelefono("099654321");
+
+        // Simulamos que el service lanza EntityExistsException
+        when(clienteService.actualizarCliente(eq(1), any(Cliente.class)))
+                .thenThrow(new EntityExistsException("Ya existe un cliente con el email: emailexistente@test.com"));
+
+        // Convertimos el cliente a JSON
+        String json = objectMapper.writeValueAsString(cambios);
+
+        // Ejecutamos el PUT y verificamos que devuelva 409 Conflict
+        mockMvc.perform(put("/api/clientes/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ya existe un cliente con el email")));
     }
 
     @Test
