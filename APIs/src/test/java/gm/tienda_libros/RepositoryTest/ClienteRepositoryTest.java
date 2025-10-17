@@ -103,6 +103,5 @@ class ClienteRepositoryTest {
         Optional<Cliente> resultado = clienteRepository.findById(999);
         assertThat(resultado).isEmpty();
     }
-
 }
 

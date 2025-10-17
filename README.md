@@ -19,15 +19,19 @@ Cliente (1)───(N) Venta (1)───(N) DetalleVenta (N)───(1) Libro
 
 ## Test
 src/test/java/gm/tienda_libros/
-├── validationtest/
-│    └── ClienteValidacionTest.java     🧠 Unitario
+├── validationtest/ 🧠 Unitario
+│    └── ClienteValidacionTest.java
+│	 └── VentaValidacionTest.java 
 │
-├── repositorytest/
-│    └── ClienteRepositoryTest.java     🧱 Integración
+├── repositorytest/ 🧱 Integración
+│    └── ClienteRepositoryTest.java
+│    └── VentaRepositoryTest.java    
 │
-├── servicetest/
-│    └── ClienteServiceTest.java        🧠 Unitario
+├── servicetest/ 🧠 Unitario
+│    └── ClienteServiceTest.java
+│    └── VentaServiceTest.java      
 │
-└── controllertest/
-     └── ClienteControllerTest.java     🧱 Integración
+└── controllertest/ 🧱 Integración
+     └── ClienteControllerTest.java
+     └── VentaControllerTest.java 	 
 
