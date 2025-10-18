@@ -96,6 +96,61 @@ class VentaControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ya existe")));
     }
 
+    // ---------- UPDATE ----------
+    @Test
+    @DisplayName("Debe retornar 200 al actualizar una venta existente")
+    void debeRetornar200AlActualizarVentaExistente() throws Exception {
+        String codigo = "V001";
+
+        Venta ventaActualizada = new Venta();
+        ventaActualizada.setId(1);
+        ventaActualizada.setCodigo(codigo);
+        ventaActualizada.setFecha(LocalDateTime.now());
+        ventaActualizada.setTotal(new BigDecimal("999.99"));
+        ventaActualizada.setCodMoneda("USD");
+        ventaActualizada.setIdCliente(1);
+
+        when(ventaService.actualizarVenta(eq(codigo), any(Venta.class))).thenReturn(ventaActualizada);
+
+        String json = objectMapper.writeValueAsString(ventaActualizada);
+
+        mockMvc.perform(put("/api/ventas/{codigo}", codigo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.codigo").value("V001"))
+                .andExpect(jsonPath("$.total").value(999.99))
+                .andExpect(jsonPath("$.codMoneda").value("USD"));
+
+        verify(ventaService).actualizarVenta(eq(codigo), any(Venta.class));
+    }
+
+    @Test
+    @DisplayName("Debe retornar 404 si se intenta actualizar una venta inexistente")
+    void debeRetornar404SiVentaNoExisteAlActualizar() throws Exception {
+        String codigo = "NO_EXISTE";
+
+        Venta venta = new Venta();
+        venta.setCodigo(codigo);
+        venta.setFecha(LocalDateTime.now());
+        venta.setTotal(new BigDecimal("500.00"));
+        venta.setCodMoneda("USD");
+        venta.setIdCliente(1);
+
+        when(ventaService.actualizarVenta(eq(codigo), any(Venta.class)))
+                .thenThrow(new EntityNotFoundException("Venta no encontrada con código: " + codigo));
+
+        String json = objectMapper.writeValueAsString(venta);
+
+        mockMvc.perform(put("/api/ventas/{codigo}", codigo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("no encontrada")));
+
+        verify(ventaService).actualizarVenta(eq(codigo), any(Venta.class));
+    }
+
     // ---------- LISTAR ----------
     @Test
     @DisplayName("Debe retornar 200 y lista de ventas con sus clientes")
@@ -122,38 +177,51 @@ class VentaControllerTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    // ---------- OBTENER POR ID ----------
+    // ---------- FIND BY CODIGO ----------
     @Test
-    @DisplayName("Debe retornar 200 al obtener venta existente")
-    void debeRetornar200AlObtenerVentaExistente() throws Exception {
-        Venta venta = new Venta("V001", LocalDateTime.now(), new BigDecimal("150.50"), "USD", 1, null);
+    @DisplayName("Debe retornar 200 y la venta correspondiente al código existente")
+    void debeRetornar200YVentaPorCodigoExistente() throws Exception {
+        Venta venta = new Venta();
         venta.setId(1);
+        venta.setCodigo("V001");
+        venta.setFecha(LocalDateTime.now());
+        venta.setTotal(new BigDecimal("250.50"));
+        venta.setCodMoneda("USD");
+        venta.setIdCliente(1);
 
-        when(ventaService.obtenerVentaById(1)).thenReturn(venta);
+        when(ventaService.obtenerVentaByCodigo("V001")).thenReturn(venta);
 
-        mockMvc.perform(get("/api/ventas/1"))
+        mockMvc.perform(get("/api/ventas/V001")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.codigo").value("V001"));
+                .andExpect(jsonPath("$.codigo").value("V001"))
+                .andExpect(jsonPath("$.total").value(250.50))
+                .andExpect(jsonPath("$.codMoneda").value("USD"));
+
+        verify(ventaService).obtenerVentaByCodigo("V001");
     }
 
     @Test
-    @DisplayName("Debe retornar 404 al obtener venta inexistente")
-    void debeRetornar404AlObtenerVentaInexistente() throws Exception {
-        when(ventaService.obtenerVentaById(99))
-                .thenThrow(new EntityNotFoundException("Venta no encontrada con ID: 99"));
+    @DisplayName("Debe retornar 404 si no existe una venta con ese código")
+    void debeRetornar404SiVentaNoExistePorCodigo() throws Exception {
+        when(ventaService.obtenerVentaByCodigo("NO_EXISTE"))
+                .thenThrow(new EntityNotFoundException("Venta no encontrada con código: NO_EXISTE"));
 
-        mockMvc.perform(get("/api/ventas/99"))
+        mockMvc.perform(get("/api/ventas/NO_EXISTE")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Venta no encontrada")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("no encontrada")));
+
+        verify(ventaService).obtenerVentaByCodigo("NO_EXISTE");
     }
 
     // ---------- ELIMINAR ----------
     @Test
     @DisplayName("Debe retornar 204 al eliminar venta existente")
     void debeRetornar204AlEliminarVentaExistente() throws Exception {
-        doNothing().when(ventaService).eliminarVenta(1);
+        doNothing().when(ventaService).eliminarVenta("asd");
 
-        mockMvc.perform(delete("/api/ventas/1"))
+        mockMvc.perform(delete("/api/ventas/asd"))
                 .andExpect(status().isNoContent());
     }
 
@@ -161,9 +229,9 @@ class VentaControllerTest {
     @DisplayName("Debe retornar 404 al eliminar venta inexistente")
     void debeRetornar404AlEliminarVentaInexistente() throws Exception {
         doThrow(new EntityNotFoundException("Venta no encontrada con ID: 99"))
-                .when(ventaService).eliminarVenta(99);
+                .when(ventaService).eliminarVenta("asd");
 
-        mockMvc.perform(delete("/api/ventas/99"))
+        mockMvc.perform(delete("/api/ventas/asd"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Venta no encontrada")));
     }

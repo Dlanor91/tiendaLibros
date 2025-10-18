@@ -36,15 +36,14 @@ public class VentaService implements IVentaService {
     }
 
     @Override
-    public Venta obtenerVentaById(Integer id) {
-        if(id == null || id < 0){
-            throw new IllegalArgumentException("El id no puede ser null o menor que 0");
+    public Venta obtenerVentaByCodigo(String codigo) {
+        if(codigo == null || codigo.trim() ==""){
+            throw new IllegalArgumentException("El codigo de venta debe ser distinto de null y de vacio");
         }
 
-        return ventaRepository.findById(id).orElseThrow(()-> {
-                    return new EntityNotFoundException("Venta no encontrada con ID: " + id);
-                }
-        );
+        return ventaRepository.findByCodigo(codigo).orElseThrow(()-> {
+            return  new EntityNotFoundException("Venta no encontrada con Codigo: " + codigo);
+        });
     }
 
     @Override
@@ -66,17 +65,35 @@ public class VentaService implements IVentaService {
     }
 
     @Override
-    public Venta actualizarVenta(Integer id, Venta venta) {
-        return null;
-    }
+    public Venta actualizarVenta(String codigo, Venta venta) {
+        if(venta== null ){
+            throw new IllegalArgumentException("la venta no puede ser null");
+        }
 
-    @Override
-    public void eliminarVenta(Integer id) {
-        if(id == null || id < 0){
+        if(codigo== null || codigo.trim() ==""){
             throw new IllegalArgumentException("El id no puede ser null o menor que 0");
         }
 
-        Venta venta = obtenerVentaById(id);
+        Venta ventaExistente = obtenerVentaByCodigo(codigo);
+        if(ventaExistente == null){
+            throw new EntityNotFoundException("La venta a actualizar no existe");
+        }
+
+        ventaExistente.setFecha(venta.getFecha());
+        ventaExistente.setTotal(venta.getTotal());
+        ventaExistente.setCodMoneda(venta.getCodMoneda());
+        ventaExistente.setIdCliente(ventaExistente.getIdCliente());
+
+        return ventaRepository.save(ventaExistente);
+    }
+
+    @Override
+    public void eliminarVenta(String codigo) {
+        if(codigo== null || codigo.trim() ==""){
+            throw new IllegalArgumentException("El id no puede ser null o menor que 0");
+        }
+
+        Venta venta = obtenerVentaByCodigo(codigo);
 
         ventaRepository.delete(venta);
     }

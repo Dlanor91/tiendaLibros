@@ -69,40 +69,6 @@ class VentaServiceTest {
         verify(ventaRepository, never()).save(any());
     }
 
-    // ---------- READ ----------
-    @Test
-    @DisplayName("Debe retornar venta por ID si existe")
-    void debeListarVentaPorIdExistente() {
-        Venta venta = new Venta();
-        venta.setId(1);
-        venta.setCodigo("V010");
-        venta.setTotal(new BigDecimal("500"));
-        venta.setIdCliente(2);
-
-        Cliente cliente = new Cliente();
-        cliente.setId(2);
-        cliente.setNombre("Juan Cliente");
-        venta.setCliente(cliente); // mapeo de lectura
-
-        when(ventaRepository.findById(1)).thenReturn(Optional.of(venta));
-
-        Venta resultado = ventaService.obtenerVentaById(1);
-
-        assertThat(resultado).isNotNull();
-        assertThat(resultado.getCodigo()).isEqualTo("V010");
-        assertThat(resultado.getCliente().getNombre()).isEqualTo("Juan Cliente");
-    }
-
-    @Test
-    @DisplayName("Debe lanzar excepción si venta no existe al buscar por ID")
-    void debeLanzarExcepcionSiVentaNoExiste() {
-        when(ventaRepository.findById(99)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> ventaService.obtenerVentaById(99))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("no encontrada");
-    }
-
     // ---------- UPDATE ----------
     @Test
     @DisplayName("Debe actualizar una venta existente")
@@ -111,16 +77,16 @@ class VentaServiceTest {
         existente.setId(1);
         existente.setCodigo("V100");
         existente.setTotal(new BigDecimal("300"));
-        existente.setIdCliente(1);
+        existente.setCodigo("asd");
 
-        when(ventaRepository.findById(1)).thenReturn(Optional.of(existente));
+        when(ventaRepository.findByCodigo("asd")).thenReturn(Optional.of(existente));
         when(ventaRepository.save(any(Venta.class))).thenReturn(existente);
 
         Venta cambios = new Venta();
         cambios.setTotal(new BigDecimal("450.99"));
         cambios.setCodMoneda("USD");
 
-        Venta actualizado = ventaService.actualizarVenta(1, cambios);
+        Venta actualizado = ventaService.actualizarVenta("asd", cambios);
 
         assertThat(actualizado.getTotal()).isEqualByComparingTo("450.99");
         verify(ventaRepository).save(any(Venta.class));
@@ -129,12 +95,12 @@ class VentaServiceTest {
     @Test
     @DisplayName("Debe lanzar excepción al actualizar venta inexistente")
     void debeLanzarExcepcionAlActualizarInexistente() {
-        when(ventaRepository.findById(10)).thenReturn(Optional.empty());
+        when(ventaRepository.findByCodigo("asd")).thenReturn(Optional.empty());
 
         Venta cambios = new Venta();
         cambios.setTotal(new BigDecimal("150"));
 
-        assertThatThrownBy(() -> ventaService.actualizarVenta(10, cambios))
+        assertThatThrownBy(() -> ventaService.actualizarVenta("asd", cambios))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("no encontrada");
     }
@@ -144,11 +110,11 @@ class VentaServiceTest {
     @DisplayName("Debe eliminar venta existente")
     void debeEliminarVentaExistente() {
         Venta existente = new Venta();
-        existente.setId(5);
+        existente.setCodigo("asd");
 
-        when(ventaRepository.findById(5)).thenReturn(Optional.of(existente));
+        when(ventaRepository.findByCodigo("asd")).thenReturn(Optional.of(existente));
 
-        ventaService.eliminarVenta(5);
+        ventaService.eliminarVenta("asd");
 
         verify(ventaRepository).delete(existente);
     }
@@ -156,9 +122,9 @@ class VentaServiceTest {
     @Test
     @DisplayName("Debe lanzar excepción al eliminar venta inexistente")
     void debeLanzarExcepcionAlEliminarInexistente() {
-        when(ventaRepository.findById(999)).thenReturn(Optional.empty());
+        when(ventaRepository.findByCodigo("asd")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> ventaService.eliminarVenta(999))
+        assertThatThrownBy(() -> ventaService.eliminarVenta("asd"))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("no encontrada");
     }
@@ -194,5 +160,37 @@ class VentaServiceTest {
         assertThat(ventas).hasSize(2);
         assertThat(ventas.get(0).nombreCliente()).isEqualTo("Juan");
         assertThat(ventas.get(1).nombreCliente()).isEqualTo("María");
+    }
+
+    // ---------- FIND BY CODIGO ----------
+    @Test
+    @DisplayName("Debe retornar venta existente al buscar por código")
+    void debeRetornarVentaPorCodigoExistente() {
+        Venta venta = new Venta();
+        venta.setId(1);
+        venta.setCodigo("V123");
+        venta.setTotal(new BigDecimal("999.99"));
+        venta.setIdCliente(7);
+
+        when(ventaRepository.findByCodigo("V123")).thenReturn(Optional.of(venta));
+
+        Venta resultado = ventaService.obtenerVentaByCodigo("V123");
+
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getCodigo()).isEqualTo("V123");
+        assertThat(resultado.getTotal()).isEqualByComparingTo("999.99");
+        verify(ventaRepository).findByCodigo("V123");
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción si no existe venta con ese código")
+    void debeLanzarExcepcionSiNoExisteVentaPorCodigo() {
+        when(ventaRepository.findByCodigo("NO_EXISTE")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> ventaService.obtenerVentaByCodigo("NO_EXISTE"))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("no encontrada");
+
+        verify(ventaRepository).findByCodigo("NO_EXISTE");
     }
 }

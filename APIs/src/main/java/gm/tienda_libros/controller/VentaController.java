@@ -30,13 +30,39 @@ public class VentaController {
         return ResponseEntity.ok(ventas);
     }
 
+    @GetMapping("/{codigo}")
+    public ResponseEntity<?> getByCodigo(@PathVariable String codigo){
+        Venta ventaEncontrada = ventaService.obtenerVentaByCodigo(codigo);
+
+        logger.info("Ventas encontrada con codigo: {}",codigo);
+
+        return ResponseEntity.ok(ventaEncontrada);
+    }
+
     @PostMapping("")
     public ResponseEntity<?> post(@RequestBody @Valid Venta venta){
         Venta nuevaVenta = ventaService.crearVenta(venta);
 
-        logger.info("Ventas generada correctamente con ID: {}",nuevaVenta.getId());
+        logger.info("Venta generada correctamente con ID: {}", nuevaVenta.getId());
 
         URI location= URI.create("/api/ventas/"+ nuevaVenta.getId());
         return ResponseEntity.created(location).body(nuevaVenta);
+    }
+
+    @PutMapping("/{codigo}")
+    public ResponseEntity<?> put(@PathVariable String codigo, @RequestBody @Valid Venta venta){
+        Venta actualizarVenta = ventaService.actualizarVenta(codigo, venta);
+
+        logger.info("Venta actualziada correctamente con codigo: {}", codigo);
+
+        return ResponseEntity.ok(actualizarVenta);
+    }
+
+    @DeleteMapping("/{codigo}")
+    public ResponseEntity<?> delete(@PathVariable String codigo){
+        ventaService.eliminarVenta(codigo);
+
+        logger.info("Venta eliminada con codigo: {}",codigo);
+        return ResponseEntity.noContent().build();
     }
 }
