@@ -1,10 +1,7 @@
 package gm.tienda_libros.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "Ventas")
 public class Venta extends BaseEntity{
     @NotBlank(message = "El código no puede estar vacío")
+    @Size(max = 10, message = "El codigo tiene un maximo de 10 caracteres")
     @Column(nullable = false, length = 10, unique = true)
     private String codigo;
 
@@ -32,6 +30,7 @@ public class Venta extends BaseEntity{
     private BigDecimal total;
 
     @NotBlank(message = "El código de moneda no puede estar vacío")
+    @Size(max = 3, message = "El codigo de moneda tiene un maximo de 3 caracteres")
     @Column(nullable = false, length = 3)
     private String codMoneda;
 

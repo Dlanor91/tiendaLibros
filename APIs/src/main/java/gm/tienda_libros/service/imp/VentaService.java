@@ -6,7 +6,6 @@ import gm.tienda_libros.repository.VentaRepository;
 import gm.tienda_libros.service.IVentaService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +15,11 @@ import java.util.Optional;
 @Service
 public class VentaService implements IVentaService {
 
-    @Autowired
-    private VentaRepository ventaRepository;
+    private final VentaRepository ventaRepository;
+
+    public VentaService(VentaRepository ventaRepository) {
+        this.ventaRepository = ventaRepository;
+    }
 
     @Override
     public List<VentaDTO> listarVentas() {
@@ -37,13 +39,13 @@ public class VentaService implements IVentaService {
 
     @Override
     public Venta obtenerVentaByCodigo(String codigo) {
-        if(codigo == null || codigo.trim() ==""){
+        if(codigo == null || codigo.trim().isEmpty()){
             throw new IllegalArgumentException("El codigo de venta debe ser distinto de null y de vacio");
         }
 
-        return ventaRepository.findByCodigo(codigo).orElseThrow(()-> {
-            return  new EntityNotFoundException("Venta no encontrada con Codigo: " + codigo);
-        });
+        return ventaRepository.findByCodigo(codigo).orElseThrow(()->
+              new EntityNotFoundException("Venta no encontrada con Codigo: " + codigo)
+        );
     }
 
     @Override
@@ -70,7 +72,7 @@ public class VentaService implements IVentaService {
             throw new IllegalArgumentException("la venta no puede ser null");
         }
 
-        if(codigo== null || codigo.trim() ==""){
+        if(codigo== null || codigo.trim().isEmpty()){
             throw new IllegalArgumentException("El id no puede ser null o menor que 0");
         }
 
@@ -89,7 +91,7 @@ public class VentaService implements IVentaService {
 
     @Override
     public void eliminarVenta(String codigo) {
-        if(codigo== null || codigo.trim() ==""){
+        if(codigo== null || codigo.trim().isEmpty()){
             throw new IllegalArgumentException("El id no puede ser null o menor que 0");
         }
 

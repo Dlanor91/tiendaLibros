@@ -5,7 +5,6 @@ import gm.tienda_libros.repository.ClienteRepository;
 import gm.tienda_libros.service.IClienteService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,8 +13,11 @@ import java.util.Optional;
 @Service
 public class ClienteService implements IClienteService {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private final ClienteRepository clienteRepository;
+
+    public ClienteService(ClienteRepository clienteRepository) {
+        this.clienteRepository = clienteRepository;
+    }
 
     @Override
     public List<Cliente> listarClientes() {
@@ -54,9 +56,9 @@ public class ClienteService implements IClienteService {
         Cliente clienteExistente  = obtenerClientePorId(id);
 
         //No duplicar un email existente
-        if(!clienteExistente.getEmail().equals(clienteExistente.getEmail())){
-            boolean emailDuplicado = clienteRepository.findByEmail(clienteExistente.getEmail()).isPresent();
-            if(emailDuplicado){
+        if (!clienteExistente.getEmail().equals(cliente.getEmail())) {
+            boolean emailDuplicado = clienteRepository.findByEmail(cliente.getEmail()).isPresent();
+            if (emailDuplicado) {
                 throw new EntityExistsException("Ya existe un cliente con el email: " + cliente.getEmail());
             }
         }
