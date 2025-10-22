@@ -4,6 +4,7 @@ import gm.tienda_libros.model.Cliente;
 import gm.tienda_libros.repository.ClienteRepository;
 import gm.tienda_libros.service.imp.ClienteService;
 import jakarta.persistence.EntityExistsException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +29,7 @@ class ClienteServiceTest {
 
     // ---------- CREATE ----------
     @Test
+    @DisplayName("Debe crear un cliente cuando el email no existe")
     void debeCrearClienteSiEmailNoExiste() {
         when(clienteRepository.findByEmail("nuevo@test.com")).thenReturn(Optional.empty());
 
@@ -42,6 +44,7 @@ class ClienteServiceTest {
     }
 
     @Test
+    @DisplayName("Debe lanzar excepción si el email ya existe")
     void debeLanzarExcepcionSiEmailYaExiste() {
         Cliente existente = new Cliente();
         existente.setEmail("duplicado@test.com");
@@ -57,6 +60,7 @@ class ClienteServiceTest {
 
     // ---------- READ ----------
     @Test
+    @DisplayName("Debe obtener un cliente por su ID")
     void debeObtenerClientePorId() {
         Cliente cliente = new Cliente();
         cliente.setId(1);
@@ -70,6 +74,7 @@ class ClienteServiceTest {
     }
 
     @Test
+    @DisplayName("Debe lanzar excepción si el cliente no existe al buscar por ID")
     void debeLanzarExcepcionSiClienteNoExiste() {
         when(clienteRepository.findById(99)).thenReturn(Optional.empty());
 
@@ -80,6 +85,7 @@ class ClienteServiceTest {
 
     // ---------- UPDATE ----------
     @Test
+    @DisplayName("Debe actualizar un cliente existente correctamente")
     void debeActualizarClienteExistente() {
         Cliente existente = new Cliente();
         existente.setId(1);
@@ -102,6 +108,7 @@ class ClienteServiceTest {
     }
 
     @Test
+    @DisplayName("Debe lanzar excepción al intentar actualizar un cliente inexistente")
     void debeLanzarExcepcionAlActualizarClienteInexistente() {
         when(clienteRepository.findById(10)).thenReturn(Optional.empty());
 
@@ -115,6 +122,7 @@ class ClienteServiceTest {
 
     // ---------- DELETE ----------
     @Test
+    @DisplayName("Debe eliminar un cliente existente correctamente")
     void debeEliminarClienteExistente() {
         Cliente existente = new Cliente();
         existente.setId(1);
@@ -127,6 +135,7 @@ class ClienteServiceTest {
     }
 
     @Test
+    @DisplayName("Debe lanzar excepción al intentar eliminar un cliente inexistente")
     void debeLanzarExcepcionAlEliminarClienteInexistente() {
         when(clienteRepository.findById(5)).thenReturn(Optional.empty());
 
@@ -137,6 +146,7 @@ class ClienteServiceTest {
 
     // ---------- LIST ----------
     @Test
+    @DisplayName("Debe listar todos los clientes existentes")
     void debeListarTodosLosClientes() {
         when(clienteRepository.findAll()).thenReturn(List.of(new Cliente(), new Cliente()));
 

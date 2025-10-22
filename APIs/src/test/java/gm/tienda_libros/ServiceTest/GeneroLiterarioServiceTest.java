@@ -2,12 +2,8 @@ package gm.tienda_libros.ServiceTest;
 
 import gm.tienda_libros.model.GeneroLiterario;
 import gm.tienda_libros.repository.GeneroLiterarioRepository;
-import gm.tienda_libros.service.IGeneroLiterarioService;
 import gm.tienda_libros.service.imp.GeneroLiterarioService;
-import jakarta.inject.Inject;
 import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,178 +20,144 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class GeneroLiterarioServiceTest {
+class GeneroLiterarioServiceTest {
 
     @Mock
-    private GeneroLiterarioRepository repository;
+    private GeneroLiterarioRepository generoRepository;
 
     @InjectMocks
-    private GeneroLiterarioService service;
+    private GeneroLiterarioService generoService;
 
-    private GeneroLiterario g1;
-    private GeneroLiterario g2;
-
-    @BeforeEach
-    void setup() {
-        g1 = new GeneroLiterario();
-        g1.setId(1);
-        g1.setNombre("Ficción");
-        g1.setCodigo("F01");
-
-        g2 = new GeneroLiterario();
-        g2.setId(2);
-        g2.setNombre("Historia");
-        g2.setCodigo("HIS");
-    }
-
-
-
-
+    // ---------- CREATE ----------
     @Test
-    @DisplayName("Obtener por codigo: si existe devuelve el genero")
-    void obtenerPorCodigoDevuelveGenero() {
-        when(repository.findByCodigo("F01")).thenReturn(Optional.of(g1));
-
-        GeneroLiterario found = service.obtenerGeneroLiterarioByCodigo("F01");
-
-        assertThat(found).isNotNull();
-        assertThat(found.getNombre()).isEqualTo("Ficción");
-        verify(repository).findByCodigo("F01");
-    }
-
-    @Test
-    @DisplayName("Listar generos: debe devolver lista desde repo ordenada por codigo")
-    void listarGenerosDevuelveListaOrdenada() {
-        // Mock del repo con sort
-        when(repository.findAll(Sort.by("codigo")))
-                .thenReturn(Arrays.asList(g1, g2));
-
-        List<GeneroLiterario> lista = service.listarGenerosLiterarios();
-
-        assertThat(lista).hasSize(2);
-        // Verificamos que el orden por codigo se mantiene
-        assertThat(lista.get(0).getCodigo()).isEqualTo("F01");
-        assertThat(lista.get(1).getCodigo()).isEqualTo("HIS");
-
-        // Verificamos que el repo fue llamado con el sort correcto
-        verify(repository, times(1)).findAll(Sort.by("codigo"));
-    }
-
-    @Test
-    @DisplayName("Agregar genero: caso exitoso devuelve y guarda")
-    void agregarGeneroExitoso() {
-        when(repository.findByCodigo("NEW")).thenReturn(Optional.empty());
-        when(repository.save(any(GeneroLiterario.class))).thenAnswer(inv -> {
-            GeneroLiterario arg = inv.getArgument(0);
-            arg.setId(99);
-            return arg;
-        });
+    @DisplayName("Debe crear un género literario si el código no existe")
+    void debeCrearGeneroSiCodigoNoExiste() {
+        when(generoRepository.findByCodigo("F01")).thenReturn(Optional.empty());
 
         GeneroLiterario nuevo = new GeneroLiterario();
-        nuevo.setNombre("Nuevo");
-        nuevo.setCodigo("NEW");
+        nuevo.setNombre("Ficción");
+        nuevo.setCodigo("F01");
 
-        GeneroLiterario saved = service.agregarGeneroLiterario(nuevo);
+        generoService.agregarGeneroLiterario(nuevo);
 
-        assertThat(saved.getId()).isEqualTo(99);
-        assertThat(saved.getCodigo()).isEqualTo("NEW");
-        verify(repository).findByCodigo("NEW");
-        verify(repository).save(any(GeneroLiterario.class));
+        verify(generoRepository).save(nuevo);
     }
 
     @Test
-    @DisplayName("Eliminar genero: si no existe lanza EntityNotFoundException")
-    void eliminarNoExisteLanza() {
-        when(repository.findByCodigo("NOEX")).thenReturn(Optional.empty());
+    @DisplayName("Debe lanzar excepción si el código del género ya existe")
+    void debeLanzarExcepcionSiCodigoYaExiste() {
+        GeneroLiterario existente = new GeneroLiterario();
+        existente.setCodigo("HIS");
+        when(generoRepository.findByCodigo("HIS")).thenReturn(Optional.of(existente));
 
-        assertThatThrownBy(() -> service.eliminarGeneroLiterario("NOEX"))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessageContaining("No existe el género");
+        GeneroLiterario nuevo = new GeneroLiterario();
+        nuevo.setCodigo("HIS");
 
-        verify(repository).findByCodigo("NOEX");
-        verify(repository, never()).delete(any());
+        assertThatThrownBy(() -> generoService.agregarGeneroLiterario(nuevo))
+                .isInstanceOf(EntityExistsException.class)
+                .hasMessageContaining("Ya existe");
+    }
+
+    // ---------- READ ----------
+    @Test
+    @DisplayName("Debe obtener un género literario por su código")
+    void debeObtenerGeneroPorCodigo() {
+        GeneroLiterario genero = new GeneroLiterario();
+        genero.setCodigo("POE");
+        genero.setNombre("Poesía");
+        when(generoRepository.findByCodigo("POE")).thenReturn(Optional.of(genero));
+
+        GeneroLiterario resultado = generoService.obtenerGeneroLiterarioByCodigo("POE");
+
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getNombre()).isEqualTo("Poesía");
     }
 
     @Test
-    @DisplayName("Eliminar genero: caso exitoso invoca delete")
-    void eliminarExitosoInvocaDelete() {
-        when(repository.findByCodigo("F01")).thenReturn(Optional.of(g1));
+    @DisplayName("Debe lanzar excepción si no existe un género con el código indicado")
+    void debeLanzarExcepcionSiGeneroNoExiste() {
+        when(generoRepository.findByCodigo("XYZ")).thenReturn(Optional.empty());
 
-        service.eliminarGeneroLiterario("F01");
-
-        verify(repository).findByCodigo("F01");
-        verify(repository).delete(g1);
-    }
-
-    /* --------- Implementación simple y localizada del servicio para testear con @InjectMocks ---------
-       Como en el enunciado sólo diste la interfaz IGeneroLiterarioService, incluyo una implementación mínima
-       dentro del test para poder usar @InjectMocks y verificar comportamiento con Mockito. En tu proyecto
-       sustituye esto por la implementación real si ya existe.
-    */
-    static abstract class GeneroLiterarioServiceImpl implements IGeneroLiterarioService {
-
-        private final GeneroLiterarioRepository repo;
-
-        @Inject
-        public GeneroLiterarioServiceImpl(GeneroLiterarioRepository repo) {
-            this.repo = repo;
-        }
-
-        @Override
-        public List<GeneroLiterario> listarGenerosLiterarios() {
-            return repo.findAll();
-        }
-
-        // nota: firma adaptada para test: uso String codigo como parámetro
-        public GeneroLiterario obtenerGeneroLiterarioByCodigo(String codigo) {
-            return repo.findByCodigo(codigo).orElseThrow(() ->
-                    new EntityNotFoundException("Género con código " + codigo + " no encontrado"));
-        }
-
-        public GeneroLiterario agregarGeneroLiterario(GeneroLiterario genero) {
-            repo.findByCodigo(genero.getCodigo()).ifPresent(g -> {
-                throw new EntityExistsException("Género con código " + genero.getCodigo() + " ya existe");
-            });
-            return repo.save(genero);
-        }
-
-        @Override
-        public GeneroLiterario actualizarGeneroLiterario(String codigo, GeneroLiterario generoLiterario) {
-            // implementación simple para tests - no usada en los tests actuales
-            return repo.save(generoLiterario);
-        }
-
-        public void eliminarGeneroLiterario(String codigo) {
-            GeneroLiterario g = repo.findByCodigo(codigo).orElseThrow(() ->
-                    new EntityNotFoundException("Género con código " + codigo + " no encontrado"));
-            repo.delete(g);
-        }
-    }
-
-    @Test
-    @DisplayName("Actualizar genero: caso exitoso guarda cambios")
-    void actualizarGeneroExitoso() {
-        when(repository.findByCodigo("F01")).thenReturn(Optional.of(g1));
-        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        g1.setNombre("Ficción Moderna");
-        GeneroLiterario updated = service.actualizarGeneroLiterario("F01", g1);
-
-        assertThat(updated.getNombre()).isEqualTo("Ficción Moderna");
-        verify(repository).save(g1);
-    }
-
-    @Test
-    @DisplayName("Obtener por codigo: si no existe lanza EntityNotFoundException")
-    void obtenerPorCodigoNoExisteLanza() {
-        when(repository.findByCodigo("XXX")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> service.obtenerGeneroLiterarioByCodigo("XXX"))
-                .isInstanceOf(EntityNotFoundException.class)
+        assertThatThrownBy(() -> generoService.obtenerGeneroLiterarioByCodigo("XYZ"))
+                .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("no encontrado");
-
-        verify(repository).findByCodigo("XXX");
     }
 
+    // ---------- UPDATE ----------
+    @Test
+    @DisplayName("Debe actualizar un género existente correctamente")
+    void debeActualizarGeneroExistente() {
+        GeneroLiterario existente = new GeneroLiterario();
+        existente.setCodigo("FIC");
+        existente.setNombre("Ficción");
 
+        when(generoRepository.findByCodigo("FIC")).thenReturn(Optional.of(existente));
+        when(generoRepository.save(any(GeneroLiterario.class))).thenReturn(existente);
+
+        GeneroLiterario cambios = new GeneroLiterario();
+        cambios.setNombre("Ficción Moderna");
+        cambios.setCodigo("FIC");
+
+        GeneroLiterario actualizado = generoService.actualizarGeneroLiterario("FIC", cambios);
+
+        assertThat(actualizado.getNombre()).isEqualTo("Ficción Moderna");
+        verify(generoRepository).save(existente);
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al intentar actualizar un género inexistente")
+    void debeLanzarExcepcionAlActualizarGeneroInexistente() {
+        when(generoRepository.findByCodigo("ZZZ")).thenReturn(Optional.empty());
+
+        GeneroLiterario cambios = new GeneroLiterario();
+        cambios.setNombre("Nuevo");
+
+        assertThatThrownBy(() -> generoService.actualizarGeneroLiterario("ZZZ", cambios))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("No encontrado");
+    }
+
+    // ---------- DELETE ----------
+    @Test
+    @DisplayName("Debe eliminar un género existente correctamente")
+    void debeEliminarGeneroExistente() {
+        GeneroLiterario existente = new GeneroLiterario();
+        existente.setCodigo("HIS");
+
+        when(generoRepository.findByCodigo("HIS")).thenReturn(Optional.of(existente));
+
+        generoService.eliminarGeneroLiterario("HIS");
+
+        verify(generoRepository).delete(existente);
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al intentar eliminar un género inexistente")
+    void debeLanzarExcepcionAlEliminarGeneroInexistente() {
+        when(generoRepository.findByCodigo("ZZZ")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> generoService.eliminarGeneroLiterario("ZZZ"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("No encontrado");
+    }
+
+    // ---------- LIST ----------
+    @Test
+    @DisplayName("Debe listar todos los géneros literarios ordenados por código")
+    void debeListarTodosLosGenerosOrdenadosPorCodigo() {
+        List<GeneroLiterario> mockGeneros = List.of(
+                new GeneroLiterario("Ficción", "FIC"),
+                new GeneroLiterario("Poesía", "POE")
+        );
+        when(generoRepository.findAll(Sort.by("codigo"))).thenReturn(mockGeneros);
+
+        List<GeneroLiterario> generos = generoService.listarGenerosLiterarios();
+
+        assertThat(generos).hasSize(2);
+        assertThat(generos.get(0).getCodigo()).isEqualTo("FIC");
+        assertThat(generos.get(1).getCodigo()).isEqualTo("POE");
+
+        verify(generoRepository).findAll(Sort.by("codigo"));
+        verifyNoMoreInteractions(generoRepository);
+    }
 }

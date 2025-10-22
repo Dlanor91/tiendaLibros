@@ -6,7 +6,6 @@ import gm.tienda_libros.service.imp.VentaService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +17,11 @@ import java.util.List;
 public class VentaController {
     private static final Logger logger = LoggerFactory.getLogger(VentaController.class);
 
-    @Autowired
-    private VentaService ventaService;
+    private final VentaService ventaService;
+
+    public VentaController(VentaService ventaService) {
+        this.ventaService = ventaService;
+    }
 
     @GetMapping()
     public ResponseEntity<List<VentaDTO>> getAll(){

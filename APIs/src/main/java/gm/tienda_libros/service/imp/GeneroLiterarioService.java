@@ -3,6 +3,7 @@ package gm.tienda_libros.service.imp;
 import gm.tienda_libros.model.GeneroLiterario;
 import gm.tienda_libros.repository.GeneroLiterarioRepository;
 import gm.tienda_libros.service.IGeneroLiterarioService;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,16 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
 
     @Override
     public GeneroLiterario agregarGeneroLiterario(GeneroLiterario generoLiterario) {
-        return null;
+        if (generoLiterario == null){
+            throw new IllegalArgumentException("El genero debe ser enviado para ingresarlo");
+        }
+
+        boolean existeGeneroLiterario = generoLiterarioRepository.findByCodigo(generoLiterario.getCodigo()).isPresent();
+        if (existeGeneroLiterario){
+            throw new EntityExistsException("Ya existe ese código de género literario");
+        }
+
+        return  generoLiterarioRepository.save(generoLiterario);
     }
 
     @Override
@@ -50,7 +60,7 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
         }
 
         GeneroLiterario buscarGeneroliterario = generoLiterarioRepository.findByCodigo(codigo).orElseThrow(
-                ()-> new EntityNotFoundException("No existe un genero con ese codigo ingresado")
+                ()-> new EntityNotFoundException("No encontrado un genero con ese codigo ingresado")
         );
 
         buscarGeneroliterario.setNombre(generoLiterario.getNombre());
@@ -65,7 +75,7 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
         }
 
         GeneroLiterario buscarGeneroliterario = generoLiterarioRepository.findByCodigo(codigo).orElseThrow(
-                ()-> new EntityNotFoundException("No existe el género con ese codigo ingresado")
+                ()-> new EntityNotFoundException("No encontrado el género con ese codigo ingresado")
         );
 
         generoLiterarioRepository.delete(buscarGeneroliterario);

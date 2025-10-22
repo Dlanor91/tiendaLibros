@@ -2,14 +2,21 @@ package gm.tienda_libros.ControllerTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gm.tienda_libros.controller.ClienteController;
+import gm.tienda_libros.exception.GlobalExceptionHandler;
 import gm.tienda_libros.model.Cliente;
 import gm.tienda_libros.service.imp.ClienteService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,43 +25,47 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ClienteController.class)
+@ExtendWith(MockitoExtension.class)
 class ClienteControllerTest {
 
-    @Autowired
-    private org.springframework.test.web.servlet.MockMvc mockMvc;
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    @Mock
     private ClienteService clienteService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @InjectMocks
+    private ClienteController clienteController;
 
-    //---------- Crear ----------//
+    @BeforeEach
+    void setup() {
+        mockMvc = MockMvcBuilders.standaloneSetup(clienteController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+        objectMapper = new ObjectMapper();
+    }
+
+    // ---------- CREAR ----------
     @Test
-    void debeRetornar201AlCrearClienteValido() throws Exception {
-        Cliente clienteGuardado = new Cliente();
+    @DisplayName("POST /api/clientes -> 201 cliente válido")
+    void crearClienteValido() throws Exception {
+        Cliente clienteGuardado = new Cliente("Juan","juan@test.com","099123456");
         clienteGuardado.setId(1);
-        clienteGuardado.setNombre("Juan");
-        clienteGuardado.setEmail("juan@test.com");
-        clienteGuardado.setTelefono("099123456");
 
-        when(clienteService.registrarCliente(any(Cliente.class)))
-                .thenReturn(clienteGuardado);
-
-        String json = """
-            {"nombre": "Juan", "email": "juan@test.com", "telefono": "099123456"}
-        """;
+        when(clienteService.registrarCliente(any(Cliente.class))).thenReturn(clienteGuardado);
 
         mockMvc.perform(post("/api/clientes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content(objectMapper.writeValueAsString(clienteGuardado)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/clientes/1")) // opcional
-                .andExpect(jsonPath("$.nombre").value("Juan"));
+                .andExpect(header().string("Location", "/api/clientes/1"))
+                .andExpect(jsonPath("$.nombre").value("Juan"))
+                .andExpect(jsonPath("$.email").value("juan@test.com"));
     }
 
     @Test
-    void debeRetornar400SiFaltaEmail() throws Exception {
+    @DisplayName("POST /api/clientes -> 400 si falta email")
+    void crearClienteSinEmail() throws Exception {
         String json = """
             {"nombre": "Juan", "telefono": "099123456"}
         """;
@@ -66,95 +77,71 @@ class ClienteControllerTest {
     }
 
     @Test
-    void debeRetornar409SiEmailDuplicado() throws Exception {
-        Cliente cliente = new Cliente();
-        cliente.setNombre("Juan");
-        cliente.setEmail("juan@test.com");
-        cliente.setTelefono("099123456");
-
+    @DisplayName("POST /api/clientes -> 409 cliente duplicado")
+    void crearClienteDuplicado() throws Exception {
+        Cliente cliente = new Cliente("Juan","juan@test.com","099123456");
         when(clienteService.registrarCliente(any(Cliente.class)))
                 .thenThrow(new EntityExistsException("Ya existe un cliente con el email: " + cliente.getEmail()));
 
-        String json = objectMapper.writeValueAsString(cliente);
-
         mockMvc.perform(post("/api/clientes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content(objectMapper.writeValueAsString(cliente)))
                 .andExpect(status().isConflict())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ya existe")));
     }
 
-    //---------- Update ----------//
+    // ---------- ACTUALIZAR ----------
     @Test
-    void debeRetornar404AlActualizarClienteInexistente() throws Exception {
-        Cliente cambios = new Cliente();
-        cambios.setNombre("Juan Actualizado");
-        cambios.setEmail("juan@test.com");
-        cambios.setTelefono("099654321");
+    @DisplayName("PUT /api/clientes/{id} -> 200 cliente existente")
+    void actualizarClienteExistente() throws Exception {
+        Cliente cambios = new Cliente("Juan Actualizado","juan@test.com","099654321");
 
-        when(clienteService.actualizarCliente(eq(99), any(Cliente.class)))
-                .thenThrow(new EntityNotFoundException("Cliente no encontrado con ID: 99"));
-
-        String json = objectMapper.writeValueAsString(cambios);
-
-        mockMvc.perform(put("/api/clientes/99")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("no encontrado")));
-    }
-
-    @Test
-    void debeRetornar409AlActualizarClienteConEmailExistente() throws Exception {
-        // Datos que se quieren actualizar
-        Cliente cambios = new Cliente();
-        cambios.setNombre("Juan Actualizado");
-        cambios.setEmail("emailexistente@test.com"); // Email que ya existe
-        cambios.setTelefono("099654321");
-
-        // Simulamos que el service lanza EntityExistsException
-        when(clienteService.actualizarCliente(eq(1), any(Cliente.class)))
-                .thenThrow(new EntityExistsException("Ya existe un cliente con el email: emailexistente@test.com"));
-
-        // Convertimos el cliente a JSON
-        String json = objectMapper.writeValueAsString(cambios);
-
-        // Ejecutamos el PUT y verificamos que devuelva 409 Conflict
-        mockMvc.perform(put("/api/clientes/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isConflict())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ya existe un cliente con el email")));
-    }
-
-    @Test
-    void debeRetornar200AlActualizarClienteExistente() throws Exception {
-        Cliente cambios = new Cliente();
-        cambios.setNombre("Juan Actualizado");
-        cambios.setEmail("juan@test.com");
-        cambios.setTelefono("099654321");
-
-        when(clienteService.actualizarCliente(eq(1), any(Cliente.class)))
-                .thenReturn(cambios);
-
-        String json = objectMapper.writeValueAsString(cambios);
+        when(clienteService.actualizarCliente(eq(1), any(Cliente.class))).thenReturn(cambios);
 
         mockMvc.perform(put("/api/clientes/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content(objectMapper.writeValueAsString(cambios)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Juan Actualizado"))
                 .andExpect(jsonPath("$.telefono").value("099654321"));
     }
 
-    //---------- Find By Id ----------//
     @Test
-    void debeRetornar200AlObtenerClienteExistente() throws Exception {
-        Cliente cliente = new Cliente();
+    @DisplayName("PUT /api/clientes/{id} -> 404 cliente inexistente")
+    void actualizarClienteInexistente() throws Exception {
+        Cliente cambios = new Cliente("Juan Actualizado","juan@test.com","099654321");
+
+        when(clienteService.actualizarCliente(eq(99), any(Cliente.class)))
+                .thenThrow(new EntityNotFoundException("Cliente no encontrado con ID: 99"));
+
+        mockMvc.perform(put("/api/clientes/99")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cambios)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("no encontrado")));
+    }
+
+    @Test
+    @DisplayName("PUT /api/clientes/{id} -> 409 email existente")
+    void actualizarClienteEmailDuplicado() throws Exception {
+        Cliente cambios = new Cliente("Juan Actualizado","emailexistente@test.com","099654321");
+
+        when(clienteService.actualizarCliente(eq(1), any(Cliente.class)))
+                .thenThrow(new EntityExistsException("Ya existe un cliente con el email: emailexistente@test.com"));
+
+        mockMvc.perform(put("/api/clientes/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cambios)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ya existe")));
+    }
+
+    // ---------- OBTENER ----------
+    @Test
+    @DisplayName("GET /api/clientes/{id} -> 200 cliente existente")
+    void obtenerClienteExistente() throws Exception {
+        Cliente cliente = new Cliente("Juan","juan@test.com","099123456");
         cliente.setId(1);
-        cliente.setNombre("Juan");
-        cliente.setEmail("juan@test.com");
-        cliente.setTelefono("099123456");
 
         when(clienteService.obtenerClientePorId(1)).thenReturn(cliente);
 
@@ -165,7 +152,8 @@ class ClienteControllerTest {
     }
 
     @Test
-    void debeRetornar404AlObtenerClienteInexistente() throws Exception {
+    @DisplayName("GET /api/clientes/{id} -> 404 cliente inexistente")
+    void obtenerClienteInexistente() throws Exception {
         when(clienteService.obtenerClientePorId(99))
                 .thenThrow(new EntityNotFoundException("Cliente no encontrado con ID: 99"));
 
@@ -174,9 +162,10 @@ class ClienteControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("no encontrado")));
     }
 
-    //---------- Eliminar ----------//
+    // ---------- ELIMINAR ----------
     @Test
-    void debeRetornar204AlEliminarClienteExistente() throws Exception {
+    @DisplayName("DELETE /api/clientes/{id} -> 204 cliente existente")
+    void eliminarClienteExistente() throws Exception {
         doNothing().when(clienteService).eliminarCliente(1);
 
         mockMvc.perform(delete("/api/clientes/1"))
@@ -184,7 +173,8 @@ class ClienteControllerTest {
     }
 
     @Test
-    void debeRetornar404AlEliminarClienteInexistente() throws Exception {
+    @DisplayName("DELETE /api/clientes/{id} -> 404 cliente inexistente")
+    void eliminarClienteInexistente() throws Exception {
         doThrow(new EntityNotFoundException("Cliente no encontrado con ID: 99"))
                 .when(clienteService).eliminarCliente(99);
 
@@ -193,12 +183,13 @@ class ClienteControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("no encontrado")));
     }
 
-    //---------- Listar ----------//
+    // ---------- LISTAR ----------
     @Test
-    void debeRetornar200YListaDeClientes() throws Exception {
+    @DisplayName("GET /api/clientes -> 200 lista de clientes")
+    void listarClientes() throws Exception {
         List<Cliente> clientes = List.of(
-                new Cliente("Juan", "juan@test.com", "099123456"),
-                new Cliente("Ana", "ana@test.com", "099654321")
+                new Cliente("Juan","juan@test.com","099123456"),
+                new Cliente("Ana","ana@test.com","099654321")
         );
 
         when(clienteService.listarClientes()).thenReturn(clientes);
@@ -211,7 +202,8 @@ class ClienteControllerTest {
     }
 
     @Test
-    void debeRetornar200YListaVaciaSiNoHayClientes() throws Exception {
+    @DisplayName("GET /api/clientes -> 200 lista vacía")
+    void listarClientesVacio() throws Exception {
         when(clienteService.listarClientes()).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/api/clientes"))

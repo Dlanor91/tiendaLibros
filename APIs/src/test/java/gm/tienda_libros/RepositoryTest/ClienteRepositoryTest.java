@@ -20,8 +20,9 @@ class ClienteRepositoryTest {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    //Save
+    // ---------- SAVE ----------
     @Test
+    @DisplayName("Debe guardar un cliente y poder recuperarlo por email")
     void debeGuardarYRecuperarCliente() {
         Cliente cliente = new Cliente();
         cliente.setNombre("Juan Pérez");
@@ -34,8 +35,9 @@ class ClienteRepositoryTest {
         assertThat(resultado).isPresent();
     }
 
-    //FindByEmail
+    // ---------- FIND BY EMAIL ----------
     @Test
+    @DisplayName("Debe fallar al intentar guardar dos clientes con el mismo email")
     void debeFallarSiEmailDuplicado() {
         Cliente c1 = new Cliente();
         c1.setNombre("Juan");
@@ -52,8 +54,9 @@ class ClienteRepositoryTest {
                 .isInstanceOf(Exception.class);
     }
 
-    //Update
+    // ---------- UPDATE ----------
     @Test
+    @DisplayName("Debe actualizar los datos de un cliente existente")
     void debeActualizarClienteExistente() {
         Cliente cliente = new Cliente();
         cliente.setNombre("Luis");
@@ -67,8 +70,9 @@ class ClienteRepositoryTest {
         assertThat(actualizado.getTelefono()).isEqualTo("099999999");
     }
 
-    //Delete
+    // ---------- DELETE ----------
     @Test
+    @DisplayName("Debe eliminar un cliente correctamente")
     void debeEliminarCliente() {
         Cliente cliente = new Cliente();
         cliente.setNombre("Marta");
@@ -82,8 +86,9 @@ class ClienteRepositoryTest {
         assertThat(resultado).isEmpty();
     }
 
+    // ---------- FIND BY ID ----------
     @Test
-    @DisplayName("findById debe retornar cliente si existe")
+    @DisplayName("findById debe retornar cliente si existe en la base de datos")
     void findById_debeRetornarClienteSiExiste() {
         Cliente cliente = new Cliente();
         cliente.setNombre("Ana");
@@ -98,7 +103,7 @@ class ClienteRepositoryTest {
     }
 
     @Test
-    @DisplayName("findById debe retornar empty si no existe")
+    @DisplayName("findById debe retornar vacío si el cliente no existe")
     void findById_debeRetornarEmptySiNoExiste() {
         Optional<Cliente> resultado = clienteRepository.findById(999);
         assertThat(resultado).isEmpty();
