@@ -26,7 +26,7 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
 
     @Override
     public GeneroLiterario obtenerGeneroLiterarioByCodigo(String codigo) {
-        if (codigo == null || codigo.trim().isEmpty()){
+        if (codigo == null || codigo.trim().isBlank()){
             throw new IllegalArgumentException("El codigo ingresado es null o vacío");
         }
 
@@ -55,7 +55,7 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
             throw new IllegalArgumentException("El genero debe ser enviado para actualizar");
         }
 
-        if (codigo == null || codigo.trim().isEmpty()){
+        if (codigo == null || codigo.trim().isBlank()){
             throw new IllegalArgumentException("El codigo ingresado es null o vacío");
         }
 
@@ -70,7 +70,7 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
 
     @Override
     public void eliminarGeneroLiterario(String codigo) {
-        if (codigo == null || codigo.trim().isEmpty()){
+        if (codigo == null || codigo.trim().isBlank()){
             throw new IllegalArgumentException("El codigo ingresado es null o vacío");
         }
 

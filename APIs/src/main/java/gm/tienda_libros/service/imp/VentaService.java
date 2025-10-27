@@ -39,7 +39,7 @@ public class VentaService implements IVentaService {
 
     @Override
     public Venta obtenerVentaByCodigo(String codigo) {
-        if(codigo == null || codigo.trim().isEmpty()){
+        if(codigo == null || codigo.trim().isBlank()){
             throw new IllegalArgumentException("El codigo de venta debe ser distinto de null y de vacio");
         }
 
@@ -72,7 +72,7 @@ public class VentaService implements IVentaService {
             throw new IllegalArgumentException("la venta no puede ser null");
         }
 
-        if(codigo== null || codigo.trim().isEmpty()){
+        if(codigo== null || codigo.trim().isBlank()){
             throw new IllegalArgumentException("El id no puede ser null o menor que 0");
         }
 
@@ -91,7 +91,7 @@ public class VentaService implements IVentaService {
 
     @Override
     public void eliminarVenta(String codigo) {
-        if(codigo== null || codigo.trim().isEmpty()){
+        if(codigo== null || codigo.trim().isBlank()){
             throw new IllegalArgumentException("El id no puede ser null o menor que 0");
         }
 
