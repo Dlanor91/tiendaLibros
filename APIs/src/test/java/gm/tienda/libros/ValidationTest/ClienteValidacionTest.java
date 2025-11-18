@@ -15,7 +15,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ClienteValidacionTest {
+class ClienteValidacionTest {
 
     private Validator validator;
 

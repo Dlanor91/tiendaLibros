@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class VentaValidacionTest {
+class VentaValidacionTest {
 
     private Validator validator;
 
@@ -42,11 +42,13 @@ public class VentaValidacionTest {
                 .map(v -> v.getPropertyPath() + ": " + v.getMessage())
                 .collect(Collectors.toSet());
 
-        assertThat(camposConErrores).anyMatch(m -> m.contains("codigo"));
-        assertThat(camposConErrores).anyMatch(m -> m.contains("fecha"));
-        assertThat(camposConErrores).anyMatch(m -> m.contains("total"));
-        assertThat(camposConErrores).anyMatch(m -> m.contains("codMoneda"));
-        assertThat(camposConErrores).anyMatch(m -> m.contains("idCliente"));
+        assertThat(camposConErrores).satisfies(lista -> {
+            assertThat(lista).anyMatch(m -> m.contains("codigo"));
+            assertThat(lista).anyMatch(m -> m.contains("fecha"));
+            assertThat(lista).anyMatch(m -> m.contains("total"));
+            assertThat(lista).anyMatch(m -> m.contains("codMoneda"));
+            assertThat(lista).anyMatch(m -> m.contains("idCliente"));
+        });
     }
 
     @Test

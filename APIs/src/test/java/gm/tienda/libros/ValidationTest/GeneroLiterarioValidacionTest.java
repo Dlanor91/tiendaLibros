@@ -15,7 +15,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class GeneroLiterarioValidacionTest {
+class GeneroLiterarioValidacionTest {
 
     private Validator validator;
 
@@ -34,9 +34,12 @@ public class GeneroLiterarioValidacionTest {
 
         Set<ConstraintViolation<GeneroLiterario>> violations = validator.validate(g);
 
-        assertThat(violations).hasSizeGreaterThanOrEqualTo(1);
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("nombre")
-                && v.getMessage().contains("no puede estar en blanco"));
+        assertThat(violations).satisfies(list -> {
+            assertThat(list).hasSizeGreaterThanOrEqualTo(1);
+            assertThat(list).anyMatch(v ->
+                    v.getPropertyPath().toString().equals("nombre")
+                            && v.getMessage().contains("no puede estar en blanco"));
+        });
     }
 
     @Test
@@ -48,9 +51,12 @@ public class GeneroLiterarioValidacionTest {
 
         Set<ConstraintViolation<GeneroLiterario>> violations = validator.validate(g);
 
-        assertThat(violations).hasSizeGreaterThanOrEqualTo(1);
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("codigo")
-                && v.getMessage().contains("no puede estar en blanco"));
+        assertThat(violations).satisfies(list -> {
+            assertThat(list).hasSizeGreaterThanOrEqualTo(1);
+            assertThat(list).anyMatch(v ->
+                    v.getPropertyPath().toString().equals("codigo") &&
+                            v.getMessage().contains("no puede estar en blanco"));
+        });
     }
 
     @Test
