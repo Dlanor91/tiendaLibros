@@ -210,4 +210,32 @@ class ClienteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+    @Test
+    @DisplayName("GET /api/clientes/{id} -> 500 error inesperado (handler general)")
+    void manejarExcepcionGeneral() throws Exception {
+
+        when(clienteService.obtenerClientePorId(1))
+                .thenThrow(new RuntimeException("Fallo inesperado en el servicio"));
+
+        mockMvc.perform(get("/api/clientes/1"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Error inesperado")));
+    }
+
+    @Test
+    @DisplayName("PUT /api/clientes/{id} -> 400 IllegalArgumentException")
+    void actualizarClienteIllegalArgument() throws Exception {
+
+        when(clienteService.actualizarCliente(eq(1), any(Cliente.class)))
+                .thenThrow(new IllegalArgumentException("Datos inválidos"));
+
+        mockMvc.perform(put("/api/clientes/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {"nombre": "Juan", "email": "juan@test.com", "telefono": "099123456"}
+                    """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Datos inválidos")));
+    }
 }

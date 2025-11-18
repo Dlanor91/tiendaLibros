@@ -73,18 +73,19 @@ public class VentaService implements IVentaService {
         }
 
         if(codigo== null || codigo.trim().isBlank()){
-            throw new IllegalArgumentException("El id no puede ser null o menor que 0");
+            throw new IllegalArgumentException("El código no puede ser null ni estar vacío");
+        }
+
+        if (!venta.getCodigo().equals(codigo)) {
+            throw new IllegalArgumentException("El código de la venta no puede cambiarse");
         }
 
         Venta ventaExistente = obtenerVentaByCodigo(codigo);
-        if(ventaExistente == null){
-            throw new EntityNotFoundException("La venta a actualizar no existe");
-        }
 
         ventaExistente.setFecha(venta.getFecha());
         ventaExistente.setTotal(venta.getTotal());
         ventaExistente.setCodMoneda(venta.getCodMoneda());
-        ventaExistente.setIdCliente(ventaExistente.getIdCliente());
+        ventaExistente.setIdCliente(venta.getIdCliente());
 
         return ventaRepository.save(ventaExistente);
     }
@@ -92,7 +93,7 @@ public class VentaService implements IVentaService {
     @Override
     public void eliminarVenta(String codigo) {
         if(codigo== null || codigo.trim().isBlank()){
-            throw new IllegalArgumentException("El id no puede ser null o menor que 0");
+            throw new IllegalArgumentException("El código no puede ser null ni estar vacío");
         }
 
         Venta venta = obtenerVentaByCodigo(codigo);
