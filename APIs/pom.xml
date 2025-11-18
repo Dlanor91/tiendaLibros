@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>gm</groupId>
-	<artifactId>tienda_libros</artifactId>
+	<artifactId>tiendaLibros</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
-	<name>tienda_libros</name>
+	<name>tiendaLibros</name>
 	<description>Sistema Tienda de Libros</description>
 	<url/>
 	<licenses>
@@ -112,7 +112,44 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<!-- Permite configurar test de coverage -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+
+				<configuration>
+					<excludes>
+						<exclude>java/**</exclude>
+						<exclude>jdk/**</exclude>
+						<exclude>com/sun/**</exclude>
+					</excludes>
+				</configuration>
+
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
 		</plugins>
 	</build>
-
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo1.maven.org/maven2/</url>
+		</repository>
+	</repositories>
 </project>
