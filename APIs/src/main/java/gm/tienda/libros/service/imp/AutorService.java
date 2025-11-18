@@ -3,6 +3,7 @@ package gm.tienda.libros.service.imp;
 import gm.tienda.libros.model.Autor;
 import gm.tienda.libros.repository.AutorRepository;
 import gm.tienda.libros.service.IAutorService;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class AutorService implements IAutorService {
     }
 
     @Override
-    public Autor obtenerAutorById(Integer id) {
+    public Autor obtenerAutorPorId(Integer id) {
         if(id == null || id <= 0){
             throw new IllegalArgumentException("El id no puede ser null o menor igual a 0");
         }
@@ -35,12 +36,31 @@ public class AutorService implements IAutorService {
 
     @Override
     public Autor crearAutor(Autor autor) {
-        return null;
+
+        if(autor == null){
+            throw new IllegalArgumentException("El autor no puede ser null.");
+        }
+
+        return autorRepository.save(autor);
     }
 
     @Override
     public Autor actualizarAutor(Integer id, Autor autor) {
-        return null;
+        if(autor == null){
+            throw new IllegalArgumentException("El autor no puede ser null");
+        }
+
+        Autor autorExistente  = obtenerAutorPorId(id);
+
+        if (autorExistente == null) {
+            throw new EntityExistsException("Ya existe un autor con el id: " + autor.getId());
+        }
+
+        //Modifico el resto de campos
+        autorExistente.setNombre(autor.getNombre());
+        autorExistente.setApellidos(autor.getApellidos());
+
+        return autorRepository.save(autorExistente);
     }
 
     @Override
@@ -49,7 +69,7 @@ public class AutorService implements IAutorService {
             throw new IllegalArgumentException("El id no puede ser null o menor igual a 0");
         }
 
-        Autor autorBuscado = obtenerAutorById(id);
+        Autor autorBuscado = obtenerAutorPorId(id);
 
         autorRepository.delete(autorBuscado);
     }

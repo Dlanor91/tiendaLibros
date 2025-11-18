@@ -3,15 +3,19 @@ package gm.tienda.libros.service.imp;
 import gm.tienda.libros.model.Libro;
 import gm.tienda.libros.repository.LibroRepository;
 import gm.tienda.libros.service.ILibroService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class LibroService implements ILibroService {
-    @Autowired
-    private LibroRepository libroRepository;
+
+    private final LibroRepository libroRepository;
+
+    public LibroService (LibroRepository libroRepository) {
+        this.libroRepository = libroRepository;
+    }
 
     @Override
     public List<Libro> listarLibros() {
@@ -20,9 +24,12 @@ public class LibroService implements ILibroService {
 
     @Override
     public Libro buscarLibroPorId(Integer idLibro) {
-        Libro libro = libroRepository.findById(idLibro).orElse(null);
+        if (idLibro == null || idLibro <= 0) {
+            throw new IllegalArgumentException("El ID del libro debe ser mayor que cero.");
+        }
 
-        return libro;
+        return libroRepository.findById(idLibro)
+                .orElseThrow(() -> new EntityNotFoundException("Libro no encontrado con ID: " + idLibro));
     }
 
     @Override

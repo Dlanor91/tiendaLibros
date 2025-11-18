@@ -7,7 +7,7 @@ import java.util.List;
 public interface IAutorService {
     List<Autor> listarAutores();
 
-    Autor obtenerAutorById(Integer id);
+    Autor obtenerAutorPorId(Integer id);
 
     Autor crearAutor(Autor autor);
 

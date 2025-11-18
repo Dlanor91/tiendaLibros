@@ -53,7 +53,7 @@ class AutorServiceTest {
 
         when(autorRepository.findById(1)).thenReturn(Optional.of(autor));
 
-        Autor resultado = autorService.obtenerAutorById(1);
+        Autor resultado = autorService.obtenerAutorPorId(1);
 
         assertThat(resultado).isNotNull();
         assertThat(resultado.getNombre()).isEqualTo("Isabel Allende");
@@ -64,7 +64,7 @@ class AutorServiceTest {
     void debeLanzarExcepcionSiAutorNoExiste() {
         when(autorRepository.findById(99)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> autorService.obtenerAutorById(99))
+        assertThatThrownBy(() -> autorService.obtenerAutorPorId(99))
                 .isInstanceOf(EntityNotFoundException.class);
     }
 
