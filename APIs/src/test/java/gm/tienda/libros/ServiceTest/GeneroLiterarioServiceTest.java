@@ -28,7 +28,9 @@ class GeneroLiterarioServiceTest {
     @InjectMocks
     private GeneroLiterarioService generoService;
 
-    // ---------- CREATE ----------
+    // ===============================================================
+    //                          CREATE
+    // ===============================================================
     @Test
     @DisplayName("Debe crear un género literario si el código no existe")
     void debeCrearGeneroSiCodigoNoExiste() {
@@ -58,7 +60,9 @@ class GeneroLiterarioServiceTest {
                 .hasMessageContaining("Ya existe");
     }
 
-    // ---------- READ ----------
+    // ===============================================================
+    //                          FIND BY ID
+    // ===============================================================
     @Test
     @DisplayName("Debe obtener un género literario por su código")
     void debeObtenerGeneroPorCodigo() {
@@ -83,7 +87,18 @@ class GeneroLiterarioServiceTest {
                 .hasMessageContaining("no encontrado");
     }
 
-    // ---------- UPDATE ----------
+    @Test
+    @DisplayName("Debe lanzar excepción si el código está vacío al buscar género")
+    void debeLanzarExcepcionPorCodigoVacioEnFind() {
+
+        assertThatThrownBy(() -> generoService.obtenerGeneroLiterarioByCodigo("   "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("vacío");
+    }
+
+    // ===============================================================
+    //                          UPDATE
+    // ===============================================================
     @Test
     @DisplayName("Debe actualizar un género existente correctamente")
     void debeActualizarGeneroExistente() {
@@ -117,7 +132,21 @@ class GeneroLiterarioServiceTest {
                 .hasMessageContaining("No encontrado");
     }
 
-    // ---------- DELETE ----------
+    @Test
+    @DisplayName("Debe lanzar excepción si el código está vacío al actualizar género")
+    void debeLanzarExcepcionPorCodigoVacioEnUpdate() {
+
+        GeneroLiterario cambios = new GeneroLiterario();
+        cambios.setNombre("Nuevo nombre");
+
+        assertThatThrownBy(() -> generoService.actualizarGeneroLiterario("   ", cambios))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("vacío");
+    }
+
+    // ===============================================================
+    //                          DELETE
+    // ===============================================================
     @Test
     @DisplayName("Debe eliminar un género existente correctamente")
     void debeEliminarGeneroExistente() {
@@ -141,7 +170,18 @@ class GeneroLiterarioServiceTest {
                 .hasMessageContaining("No encontrado");
     }
 
-    // ---------- LIST ----------
+    @Test
+    @DisplayName("Debe lanzar excepción si el código está vacío al eliminar género")
+    void debeLanzarExcepcionPorCodigoVacioEnDelete() {
+
+        assertThatThrownBy(() -> generoService.eliminarGeneroLiterario("   "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("vacío");
+    }
+
+    // ===============================================================
+    //                          LIST
+    // ===============================================================
     @Test
     @DisplayName("Debe listar todos los géneros literarios ordenados por código")
     void debeListarTodosLosGenerosOrdenadosPorCodigo() {

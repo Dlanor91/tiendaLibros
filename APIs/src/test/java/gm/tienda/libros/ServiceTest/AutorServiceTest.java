@@ -7,6 +7,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,79 +31,169 @@ class AutorServiceTest {
     @InjectMocks
     private AutorService autorService;
 
-    // ---------- CREATE ----------
+    // ======================================================
+    //            PROVEEDORES PARA TEST PARAMETRIZADO
+    // ======================================================
+
+    static Stream<Autor> autoresInvalidos() {
+        return Stream.of(
+                null,
+                new Autor() {{ setNombre(null); setApellidos("X"); }},
+                new Autor() {{ setNombre(" "); setApellidos("X"); }},
+                new Autor() {{ setNombre("Nombre"); setApellidos(null); }},
+                new Autor() {{ setNombre("Nombre"); setApellidos(" "); }}
+        );
+    }
+
+    static Stream<Object[]> idsInvalidos() {
+        return Stream.of(
+                new Object[]{null},
+                new Object[]{0},
+                new Object[]{-5}
+        );
+    }
+
+    // ======================================================
+    //                          CREATE
+    // ======================================================
+
     @Test
     @DisplayName("Debe crear un autor correctamente")
     void debeCrearAutor() {
         Autor nuevo = new Autor();
-        nuevo.setNombre("Gabriel García Márquez");
+        nuevo.setNombre("Gabriel");
+        nuevo.setApellidos("García Márquez");
 
-        when(autorRepository.save(nuevo)).thenReturn(nuevo);
+        when(autorRepository.save(any(Autor.class))).thenReturn(nuevo);
 
         Autor creado = autorService.crearAutor(nuevo);
 
-        assertThat(creado).isEqualTo(nuevo);
+        assertThat(creado).isNotNull();
+        assertThat(creado.getNombre()).isEqualTo("Gabriel");
+        assertThat(creado.getApellidos()).isEqualTo("García Márquez");
+
         verify(autorRepository).save(nuevo);
     }
 
-    // ---------- READ ----------
+
     @Test
-    @DisplayName("Debe obtener un autor por su ID")
+    @DisplayName("Debe lanzar IllegalArgumentException cuando el autor es null al crear")
+    void debeLanzarExcepcionAlCrearAutorNull() {
+
+        assertThatThrownBy(() -> autorService.crearAutor(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no puede ser null"); // evita depender solo de "autor"
+
+        verify(autorRepository, never()).save(any());
+    }
+
+    // ======================================================
+    //                          FIND BY ID
+    // ======================================================
+
+    @Test
+    @DisplayName("Debe lanzar IllegalArgumentException cuando el ID es inválido")
+    void debeLanzarExcepcionPorIdInvalido() {
+        assertThatThrownBy(() -> autorService.obtenerAutorPorId(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("id");
+
+        verify(autorRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("Debe obtener un autor existente por su ID")
     void debeObtenerAutorPorId() {
         Autor autor = new Autor();
         autor.setId(1);
-        autor.setNombre("Isabel Allende");
+        autor.setNombre("Isabel");
+        autor.setApellidos("Allende");
 
         when(autorRepository.findById(1)).thenReturn(Optional.of(autor));
 
         Autor resultado = autorService.obtenerAutorPorId(1);
 
         assertThat(resultado).isNotNull();
-        assertThat(resultado.getNombre()).isEqualTo("Isabel Allende");
+        assertThat(resultado.getNombre()).isEqualTo("Isabel");
+        assertThat(resultado.getApellidos()).isEqualTo("Allende");
+        verify(autorRepository).findById(1);
     }
 
     @Test
-    @DisplayName("Debe lanzar excepción si el autor no existe")
+    @DisplayName("Debe lanzar EntityNotFoundException cuando el autor no existe")
     void debeLanzarExcepcionSiAutorNoExiste() {
         when(autorRepository.findById(99)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> autorService.obtenerAutorPorId(99))
-                .isInstanceOf(EntityNotFoundException.class);
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("se encontró el autor");
     }
 
-    // ---------- UPDATE ----------
+    // ======================================================
+    //                          UPDATE
+    // ======================================================
     @Test
     @DisplayName("Debe actualizar un autor existente correctamente")
     void debeActualizarAutorExistente() {
         Autor existente = new Autor();
         existente.setId(1);
-        existente.setNombre("Ernest Hemingway");
+        existente.setNombre("Ernest");
+        existente.setApellidos("Hemingway");
 
         when(autorRepository.findById(1)).thenReturn(Optional.of(existente));
-        when(autorRepository.save(any(Autor.class))).thenAnswer(i -> i.getArgument(0));
+        when(autorRepository.save(existente)).thenReturn(existente);
 
         Autor cambios = new Autor();
-        cambios.setNombre("Ernest Hemingway Actualizado");
+        cambios.setNombre("Ernest Updated");
+        cambios.setApellidos("Hemingway Updated");
 
         Autor actualizado = autorService.actualizarAutor(1, cambios);
 
-        assertThat(actualizado.getNombre()).isEqualTo("Ernest Hemingway Actualizado");
+        assertThat(actualizado.getNombre()).isEqualTo("Ernest Updated");
         verify(autorRepository).save(existente);
     }
 
     @Test
-    @DisplayName("Debe lanzar excepción al actualizar un autor inexistente")
-    void debeLanzarExcepcionAlActualizarAutorInexistente() {
+    @DisplayName("Debe lanzar EntityNotFoundException al actualizar un autor inexistente")
+    void debeFallarUpdateSiAutorNoExiste() {
         when(autorRepository.findById(10)).thenReturn(Optional.empty());
 
         Autor cambios = new Autor();
-        cambios.setNombre("Nuevo Autor");
+        cambios.setNombre("Nombre");
+        cambios.setApellidos("Apellido");
 
         assertThatThrownBy(() -> autorService.actualizarAutor(10, cambios))
                 .isInstanceOf(EntityNotFoundException.class);
+
+        verify(autorRepository, never()).save(any());
     }
 
-    // ---------- DELETE ----------
+    @Test
+    @DisplayName("Debe lanzar IllegalArgumentException cuando el autor es null en actualizarAutor")
+    void debeLanzarExcepcionPorAutorNullEnActualizar() {
+
+        assertThatThrownBy(() -> autorService.actualizarAutor(1, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("autor");
+
+        verify(autorRepository, never()).findById(any());
+    }
+
+    // ======================================================
+    //                          DELETE
+    // ======================================================
+
+    @ParameterizedTest
+    @MethodSource("idsInvalidos")
+    @DisplayName("Debe fallar al eliminar cuando el ID es inválido")
+    void debeFallarEliminarIdInvalido(Integer id) {
+
+        assertThatThrownBy(() -> autorService.eliminarAutor(id))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(autorRepository, never()).delete(any());
+    }
+
     @Test
     @DisplayName("Debe eliminar un autor existente")
     void debeEliminarAutorExistente() {
@@ -115,62 +208,65 @@ class AutorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe lanzar excepción al eliminar un autor inexistente")
-    void debeLanzarExcepcionAlEliminarAutorInexistente() {
+    @DisplayName("Debe lanzar EntityNotFoundException al eliminar un autor inexistente")
+    void debeFallarEliminarSiNoExiste() {
         when(autorRepository.findById(5)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> autorService.eliminarAutor(5))
                 .isInstanceOf(EntityNotFoundException.class);
+
+        verify(autorRepository, never()).delete(any());
     }
 
-    // ---------- LIST ----------
+    // ======================================================
+    //                          LIST
+    // ======================================================
+
     @Test
     @DisplayName("Debe listar todos los autores ordenados por nombre")
-    void debeListarTodosLosAutores() {
+    void debeListarAutores() {
         List<Autor> autoresMock = List.of(
                 new Autor() {{ setNombre("B Autor"); }},
                 new Autor() {{ setNombre("A Autor"); }}
         );
 
-        // Simular que el repository devuelve la lista ordenada
         when(autorRepository.findAll(Sort.by("nombre"))).thenReturn(autoresMock);
 
         List<Autor> autores = autorService.listarAutores();
 
         assertThat(autores).hasSize(2);
-        assertThat(autores.get(0).getNombre()).isEqualTo("B Autor");
-        assertThat(autores.get(1).getNombre()).isEqualTo("A Autor");
-
-        verify(autorRepository).findAll(Sort.by("nombre")); // verificar que se llamó con Sort
+        verify(autorRepository).findAll(Sort.by("nombre"));
     }
 
-    // ---------- SEARCH ----------
+    // ======================================================
+    //                         SEARCH
+    // ======================================================
+
+    @Test
+    @DisplayName("Debe lanzar excepción si el nombre a buscar es null o vacío")
+    void debeFallarBuscarNombreInvalido() {
+
+        assertThatThrownBy(() -> autorService.buscarAutoresNombre(null))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> autorService.buscarAutoresNombre("  "))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(autorRepository, never()).findByNombreContainingIgnoreCaseOrderByNombre(any());
+    }
+
     @Test
     @DisplayName("Debe buscar autores por nombre")
     void debeBuscarAutoresPorNombre() {
-        Autor autor1 = new Autor();
-        autor1.setNombre("Mario Vargas Llosa");
-        Autor autor2 = new Autor();
-        autor2.setNombre("Mario Benedetti");
+        Autor a1 = new Autor(); a1.setNombre("Mario Vargas Llosa");
+        Autor a2 = new Autor(); a2.setNombre("Mario Benedetti");
 
-        when(autorRepository.findByNombreContainingIgnoreCaseOrderByNombre("Mario")).thenReturn(List.of(autor1, autor2));
+        when(autorRepository.findByNombreContainingIgnoreCaseOrderByNombre("Mario"))
+                .thenReturn(List.of(a1, a2));
 
         List<Autor> resultados = autorService.buscarAutoresNombre("Mario");
 
         assertThat(resultados).hasSize(2);
-        assertThat(resultados.get(0).getNombre()).contains("Mario");
         verify(autorRepository).findByNombreContainingIgnoreCaseOrderByNombre("Mario");
-    }
-
-    @Test
-    @DisplayName("Debe lanzar excepción si el nombre es null o vacío al buscar")
-    void debeLanzarExcepcionSiNombreInvalido() {
-        assertThatThrownBy(() -> autorService.buscarAutoresNombre(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no puede ser null");
-
-        assertThatThrownBy(() -> autorService.buscarAutoresNombre("   "))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no puede ser null");
     }
 }

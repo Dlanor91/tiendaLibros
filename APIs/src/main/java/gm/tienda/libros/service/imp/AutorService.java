@@ -3,12 +3,12 @@ package gm.tienda.libros.service.imp;
 import gm.tienda.libros.model.Autor;
 import gm.tienda.libros.repository.AutorRepository;
 import gm.tienda.libros.service.IAutorService;
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class AutorService implements IAutorService {
@@ -25,12 +25,15 @@ public class AutorService implements IAutorService {
 
     @Override
     public Autor obtenerAutorPorId(Integer id) {
-        if(id == null || id <= 0){
+
+        Objects.requireNonNull(id, "El id no puede ser null");
+
+        if(id <= 0){
             throw new IllegalArgumentException("El id no puede ser null o menor igual a 0");
         }
 
         return autorRepository.findById(id).orElseThrow(
-                ()->new EntityNotFoundException("No seencontro el autor con id: " + id)
+                ()->new EntityNotFoundException("No se encontró el autor con id: " + id)
         );
     }
 
@@ -50,11 +53,8 @@ public class AutorService implements IAutorService {
             throw new IllegalArgumentException("El autor no puede ser null");
         }
 
-        Autor autorExistente  = obtenerAutorPorId(id);
-
-        if (autorExistente == null) {
-            throw new EntityExistsException("Ya existe un autor con el id: " + autor.getId());
-        }
+        Autor autorExistente = autorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el autor con id: " + id));
 
         //Modifico el resto de campos
         autorExistente.setNombre(autor.getNombre());

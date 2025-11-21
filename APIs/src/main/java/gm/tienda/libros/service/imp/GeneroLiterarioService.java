@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class GeneroLiterarioService implements IGeneroLiterarioService {
@@ -26,9 +27,9 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
 
     @Override
     public GeneroLiterario obtenerGeneroLiterarioByCodigo(String codigo) {
-        if (codigo == null || codigo.trim().isBlank()){
-            throw new IllegalArgumentException("El codigo ingresado es null o vacío");
-        }
+        validarNoNull(codigo);
+
+        validarNoVacio(codigo);
 
         return generoLiterarioRepository.findByCodigo(codigo).orElseThrow(
                 ()-> new EntityNotFoundException("Genero literario no encontrado")
@@ -37,9 +38,7 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
 
     @Override
     public GeneroLiterario agregarGeneroLiterario(GeneroLiterario generoLiterario) {
-        if (generoLiterario == null){
-            throw new IllegalArgumentException("El genero debe ser enviado para ingresarlo");
-        }
+        Objects.requireNonNull(generoLiterario, "El genero debe ser enviado para actualizar");
 
         boolean existeGeneroLiterario = generoLiterarioRepository.findByCodigo(generoLiterario.getCodigo()).isPresent();
         if (existeGeneroLiterario){
@@ -51,13 +50,11 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
 
     @Override
     public GeneroLiterario actualizarGeneroLiterario(String codigo, GeneroLiterario generoLiterario) {
-        if (generoLiterario == null){
-            throw new IllegalArgumentException("El genero debe ser enviado para actualizar");
-        }
+        validarNoNull(generoLiterario);
 
-        if (codigo == null || codigo.trim().isBlank()){
-            throw new IllegalArgumentException("El codigo ingresado es null o vacío");
-        }
+        validarNoNull(codigo);
+
+        validarNoVacio(codigo);
 
         GeneroLiterario buscarGeneroliterario = generoLiterarioRepository.findByCodigo(codigo).orElseThrow(
                 ()-> new EntityNotFoundException("No encontrado un genero con ese codigo ingresado")
@@ -70,14 +67,24 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
 
     @Override
     public void eliminarGeneroLiterario(String codigo) {
-        if (codigo == null || codigo.trim().isBlank()){
-            throw new IllegalArgumentException("El codigo ingresado es null o vacío");
-        }
+        validarNoNull(codigo);
+
+        validarNoVacio(codigo);
 
         GeneroLiterario buscarGeneroliterario = generoLiterarioRepository.findByCodigo(codigo).orElseThrow(
                 ()-> new EntityNotFoundException("No encontrado el género con ese codigo ingresado")
         );
 
         generoLiterarioRepository.delete(buscarGeneroliterario);
+    }
+
+    private void validarNoNull(Object propiedad) {
+        Objects.requireNonNull(propiedad, "El " + propiedad +" ingresado no puede ser null");
+    }
+
+    private void validarNoVacio(String propiedad) {
+        if (propiedad.trim().isBlank()) {
+            throw new IllegalArgumentException("El campo " + propiedad + " no puede estar vacío");
+        }
     }
 }

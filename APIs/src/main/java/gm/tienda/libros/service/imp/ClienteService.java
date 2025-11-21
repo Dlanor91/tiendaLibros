@@ -8,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -26,7 +27,10 @@ public class ClienteService implements IClienteService {
 
     @Override
     public Cliente obtenerClientePorId(Integer id) {
-        if (id == null || id <= 0) {
+
+        Objects.requireNonNull(id, "El id no puede ser null");
+
+        if (id <= 0) {
             throw new IllegalArgumentException("El ID de cliente debe ser mayor que cero.");
         }
 
@@ -35,9 +39,7 @@ public class ClienteService implements IClienteService {
 
     @Override
     public Cliente registrarCliente(Cliente cliente) {
-        if(cliente == null){
-            throw new IllegalArgumentException("El cliente no puede ser null.");
-        }
+        Objects.requireNonNull(cliente, "El cliente no puede ser null");
 
         Optional<Cliente> existeClienteConEmail = clienteRepository.findByEmail(cliente.getEmail());
         if(existeClienteConEmail.isPresent()){
@@ -49,19 +51,21 @@ public class ClienteService implements IClienteService {
 
     @Override
     public Cliente actualizarCliente(Integer id, Cliente cliente) {
-        if(cliente == null){
-            throw new IllegalArgumentException("El cliente no puede ser null");
-        }
+        Objects.requireNonNull(cliente, "El cliente no puede ser null");
+
 
         Cliente clienteExistente  = obtenerClientePorId(id);
 
-        //No duplicar un email existente
-        if (!clienteExistente.getEmail().equals(cliente.getEmail())) {
-            boolean emailDuplicado = clienteRepository.findByEmail(cliente.getEmail()).isPresent();
-            if (emailDuplicado) {
-                throw new EntityExistsException("Ya existe un cliente con el email: " + cliente.getEmail());
-            }
-        }
+        Objects.requireNonNull(cliente.getEmail(), "El email no puede ser null");
+
+        // Validacion de email duplicado
+        clienteRepository.findByEmail(cliente.getEmail())
+                .filter(c -> !c.getId().equals(id))  // Si el encontrado NO es el mismo cliente
+                .ifPresent(c -> {
+                    throw new EntityExistsException(
+                            "Ya existe un cliente con el email: " + cliente.getEmail()
+                    );
+                });
 
         //Modifico el resto de campos
         clienteExistente.setNombre(cliente.getNombre());
@@ -73,7 +77,10 @@ public class ClienteService implements IClienteService {
 
     @Override
     public void eliminarCliente(Integer id) {
-        if(id == null || id <=0)
+
+        Objects.requireNonNull(id, "El id no puede ser null");
+
+        if(id <=0)
         {
             throw new IllegalArgumentException("El ID de cliente debe ser mayor que cero.");
         }
