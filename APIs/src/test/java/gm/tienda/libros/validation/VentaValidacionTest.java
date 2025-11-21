@@ -1,4 +1,4 @@
-package gm.tienda.libros.ValidationTest;
+package gm.tienda.libros.validation;
 
 import gm.tienda.libros.model.Venta;
 import jakarta.validation.ConstraintViolation;

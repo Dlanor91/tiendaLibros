@@ -1,8 +1,7 @@
-package gm.tienda.libros.ControllerTest;
+package gm.tienda.libros.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import gm.tienda.libros.controller.VentaController;
 import gm.tienda.libros.dto.VentaDTO;
 import gm.tienda.libros.exception.GlobalExceptionHandler;
 import gm.tienda.libros.model.Venta;

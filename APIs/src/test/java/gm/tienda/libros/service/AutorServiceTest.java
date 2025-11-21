@@ -1,4 +1,4 @@
-package gm.tienda.libros.ServiceTest;
+package gm.tienda.libros.service;
 
 import gm.tienda.libros.dto.AutorDTO;
 import gm.tienda.libros.dto.AutorRequestDTO;

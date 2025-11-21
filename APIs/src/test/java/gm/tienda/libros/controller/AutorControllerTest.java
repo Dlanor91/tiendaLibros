@@ -1,7 +1,6 @@
-package gm.tienda.libros.ControllerTest;
+package gm.tienda.libros.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gm.tienda.libros.controller.AutorController;
 import gm.tienda.libros.dto.AutorDTO;
 import gm.tienda.libros.dto.AutorRequestDTO;
 import gm.tienda.libros.exception.GlobalExceptionHandler;

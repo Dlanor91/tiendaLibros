@@ -22,24 +22,28 @@ Cliente (1)───(N) Venta (1)───(N) DetalleVenta (N)───(1) Libro
 ## Test
 ```text
 src/test/java/gm/tienda_libros/
-├── validationtest/ 🧠 Unitario
-│    └── ClienteValidacionTest.java
-│	 └── VentaValidacionTest.java 
-│	 └── GeneroLiterarioValidacionTest.java 
+├── validation/ 🧠 Unitario
+│   └── ClienteValidacionTest.java
+│	└── VentaValidacionTest.java
+│	└── GeneroLiterarioValidacionTest.java
+│	└── AutorValidacionTest.java
 │
-├── repositorytest/ 🧱 Integración
-│    └── ClienteRepositoryTest.java
-│    └── VentaRepositoryTest.java    
-│    └── GeneroLiterarioRepositoryTest.java    
+├── repository/ 🧱 Integración
+│   └── ClienteRepositoryTest.java
+│   └── VentaRepositoryTest.java
+│	└── GeneroLiterarioRepositoryTest.java
+│	└── AutorRepositoryTest.java
 │
-├── servicetest/ 🧠 Unitario
-│    └── ClienteServiceTest.java
-│    └── VentaServiceTest.java      
-│    └── GeneroLiterarioServiceTest.java      
+├── service/ 🧠 Unitario
+│   └── ClienteServiceTest.java
+│   └── VentaServiceTest.java      
+│   └── GeneroLiterarioServiceTest.java
+│   └── AutorServiceTest.java      
 │
-└── controllertest/ 🧱 Integración
-     └── ClienteControllerTest.java
-     └── VentaControllerTest.java
-     └── GeneroLiterarioControllerTest.java
+└── controller/ 🧱 Integración
+    └── ClienteControllerTest.java
+    └── VentaControllerTest.java
+    └── GeneroLiterarioControllerTest.java    
+	└── AutorControllerTest.java
 ```
 

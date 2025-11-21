@@ -1,7 +1,6 @@
-package gm.tienda.libros.ControllerTest;
+package gm.tienda.libros.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gm.tienda.libros.controller.ClienteController;
 import gm.tienda.libros.exception.GlobalExceptionHandler;
 import gm.tienda.libros.model.Cliente;
 import gm.tienda.libros.service.imp.ClienteService;

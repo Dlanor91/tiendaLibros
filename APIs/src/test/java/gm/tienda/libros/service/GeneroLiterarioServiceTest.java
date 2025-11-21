@@ -1,4 +1,4 @@
-package gm.tienda.libros.ServiceTest;
+package gm.tienda.libros.service;
 
 import gm.tienda.libros.model.GeneroLiterario;
 import gm.tienda.libros.repository.GeneroLiterarioRepository;

@@ -1,7 +1,6 @@
-package gm.tienda.libros.RepositoryTest;
+package gm.tienda.libros.repository;
 
 import gm.tienda.libros.model.Cliente;
-import gm.tienda.libros.repository.ClienteRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
