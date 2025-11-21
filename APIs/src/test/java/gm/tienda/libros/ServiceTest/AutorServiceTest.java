@@ -1,5 +1,7 @@
 package gm.tienda.libros.ServiceTest;
 
+import gm.tienda.libros.dto.AutorDTO;
+import gm.tienda.libros.dto.AutorRequestDTO;
 import gm.tienda.libros.model.Autor;
 import gm.tienda.libros.repository.AutorRepository;
 import gm.tienda.libros.service.imp.AutorService;
@@ -60,21 +62,29 @@ class AutorServiceTest {
     @Test
     @DisplayName("Debe crear un autor correctamente")
     void debeCrearAutor() {
-        Autor nuevo = new Autor();
-        nuevo.setNombre("Gabriel");
-        nuevo.setApellidos("García Márquez");
+        // DTO de entrada
+        AutorRequestDTO dto = new AutorRequestDTO(1,"Gabriel", "García Márquez");
 
-        when(autorRepository.save(any(Autor.class))).thenReturn(nuevo);
+        // Entidad que el repositorio debería retornar
+        Autor autorGuardado = new Autor();
+        autorGuardado.setId(1);
+        autorGuardado.setNombre("Gabriel");
+        autorGuardado.setApellidos("García Márquez");
 
-        Autor creado = autorService.crearAutor(nuevo);
+        // Mock del repositorio
+        when(autorRepository.save(any(Autor.class))).thenReturn(autorGuardado);
 
+        // Ejecutar servicio
+        Autor creado = autorService.crearAutor(dto);
+
+        // Validaciones
         assertThat(creado).isNotNull();
         assertThat(creado.getNombre()).isEqualTo("Gabriel");
         assertThat(creado.getApellidos()).isEqualTo("García Márquez");
 
-        verify(autorRepository).save(nuevo);
+        // Verificación de llamada al repositorio (con una entidad Autor)
+        verify(autorRepository).save(any(Autor.class));
     }
-
 
     @Test
     @DisplayName("Debe lanzar IllegalArgumentException cuando el autor es null al crear")
@@ -143,9 +153,7 @@ class AutorServiceTest {
         when(autorRepository.findById(1)).thenReturn(Optional.of(existente));
         when(autorRepository.save(existente)).thenReturn(existente);
 
-        Autor cambios = new Autor();
-        cambios.setNombre("Ernest Updated");
-        cambios.setApellidos("Hemingway Updated");
+        AutorRequestDTO cambios = new AutorRequestDTO(1,"Ernest Updated","Hemingway Updated");
 
         Autor actualizado = autorService.actualizarAutor(1, cambios);
 
@@ -158,9 +166,7 @@ class AutorServiceTest {
     void debeFallarUpdateSiAutorNoExiste() {
         when(autorRepository.findById(10)).thenReturn(Optional.empty());
 
-        Autor cambios = new Autor();
-        cambios.setNombre("Nombre");
-        cambios.setApellidos("Apellido");
+        AutorRequestDTO cambios = new AutorRequestDTO(10,"Nombre","Apellido");
 
         assertThatThrownBy(() -> autorService.actualizarAutor(10, cambios))
                 .isInstanceOf(EntityNotFoundException.class);
@@ -232,7 +238,7 @@ class AutorServiceTest {
 
         when(autorRepository.findAll(Sort.by("nombre"))).thenReturn(autoresMock);
 
-        List<Autor> autores = autorService.listarAutores();
+        List<AutorDTO> autores = autorService.listarAutores();
 
         assertThat(autores).hasSize(2);
         verify(autorRepository).findAll(Sort.by("nombre"));

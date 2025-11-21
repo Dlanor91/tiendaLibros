@@ -1,5 +1,7 @@
 package gm.tienda.libros.service.imp;
 
+import gm.tienda.libros.dto.AutorDTO;
+import gm.tienda.libros.dto.AutorRequestDTO;
 import gm.tienda.libros.model.Autor;
 import gm.tienda.libros.repository.AutorRepository;
 import gm.tienda.libros.service.IAutorService;
@@ -19,8 +21,15 @@ public class AutorService implements IAutorService {
     }
 
     @Override
-    public List<Autor> listarAutores() {
-        return autorRepository.findAll(Sort.by("nombre"));
+    public List<AutorDTO> listarAutores() {
+        return autorRepository.findAll(Sort.by("nombre"))
+                .stream()
+                .map(autor -> new AutorDTO(
+                        autor.getId(),
+                        autor.getNombre(),
+                        autor.getApellidos()
+                ))
+                .toList();
     }
 
     @Override
@@ -38,17 +47,21 @@ public class AutorService implements IAutorService {
     }
 
     @Override
-    public Autor crearAutor(Autor autor) {
+    public Autor crearAutor(AutorRequestDTO autor) {
 
         if(autor == null){
             throw new IllegalArgumentException("El autor no puede ser null.");
         }
 
-        return autorRepository.save(autor);
+        Autor autorNuevo = new Autor();
+        autorNuevo.setNombre(autor.nombre());
+        autorNuevo.setApellidos(autor.apellidos());
+
+        return autorRepository.save(autorNuevo);
     }
 
     @Override
-    public Autor actualizarAutor(Integer id, Autor autor) {
+    public Autor actualizarAutor(Integer id, AutorRequestDTO autor) {
         if(autor == null){
             throw new IllegalArgumentException("El autor no puede ser null");
         }
@@ -57,8 +70,8 @@ public class AutorService implements IAutorService {
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el autor con id: " + id));
 
         //Modifico el resto de campos
-        autorExistente.setNombre(autor.getNombre());
-        autorExistente.setApellidos(autor.getApellidos());
+        autorExistente.setNombre(autor.nombre());
+        autorExistente.setApellidos(autor.apellidos());
 
         return autorRepository.save(autorExistente);
     }

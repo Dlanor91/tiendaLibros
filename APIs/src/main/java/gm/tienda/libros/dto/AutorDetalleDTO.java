@@ -1,4 +1,10 @@
 package gm.tienda.libros.dto;
 
-public record AutorDetalleDTO() {
-}
+import java.util.List;
+
+public record AutorDetalleDTO(
+        Integer id,
+        String nombre,
+        String apellidos,
+        List<LibroDTO> libros
+) {}
