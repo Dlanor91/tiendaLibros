@@ -1,8 +1,11 @@
 package gm.tienda.libros.service.imp;
 
 import gm.tienda.libros.dto.AutorDTO;
+import gm.tienda.libros.dto.AutorDetalleDTO;
 import gm.tienda.libros.dto.AutorRequestDTO;
+import gm.tienda.libros.dto.LibroDTO;
 import gm.tienda.libros.model.Autor;
+import gm.tienda.libros.model.Libro;
 import gm.tienda.libros.repository.AutorRepository;
 import gm.tienda.libros.service.IAutorService;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,17 +36,17 @@ public class AutorService implements IAutorService {
     }
 
     @Override
-    public Autor obtenerAutorPorId(Integer id) {
+    public AutorDetalleDTO obtenerAutorPorId(Integer id) {
 
         Objects.requireNonNull(id, "El id no puede ser null");
 
         if(id <= 0){
-            throw new IllegalArgumentException("El id no puede ser null o menor igual a 0");
+            throw new IllegalArgumentException("El id debe ser mayor que 0");
         }
 
-        return autorRepository.findById(id).orElseThrow(
-                ()->new EntityNotFoundException("No se encontró el autor con id: " + id)
-        );
+        Autor autor = findAutorOrThrow(id);
+
+        return mapToAutorDetalleDTO(autor);
     }
 
     @Override
@@ -66,8 +69,7 @@ public class AutorService implements IAutorService {
             throw new IllegalArgumentException("El autor no puede ser null");
         }
 
-        Autor autorExistente = autorRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el autor con id: " + id));
+        Autor autorExistente = findAutorOrThrow(id);
 
         //Modifico el resto de campos
         autorExistente.setNombre(autor.nombre());
@@ -82,9 +84,9 @@ public class AutorService implements IAutorService {
             throw new IllegalArgumentException("El id no puede ser null o menor igual a 0");
         }
 
-        Autor autorBuscado = obtenerAutorPorId(id);
+        Autor autorEliminar = findAutorOrThrow(id);
 
-        autorRepository.delete(autorBuscado);
+        autorRepository.delete(autorEliminar);
     }
 
     @Override
@@ -94,5 +96,45 @@ public class AutorService implements IAutorService {
         }
 
         return autorRepository.findByNombreContainingIgnoreCaseOrderByNombre(nombre);
+    }
+
+    private Autor findAutorOrThrow(Integer id) {
+        return autorRepository.findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("No se encontró el autor con id: " + id));
+    }
+
+    private AutorDetalleDTO mapToAutorDetalleDTO(Autor autor) {
+
+        List<LibroDTO> libros = autor.getLibros()
+                .stream()
+                .map(this::mapToLibroDTO)
+                .toList();
+
+        return new AutorDetalleDTO(
+                autor.getId(),
+                autor.getNombre(),
+                autor.getApellidos(),
+                libros
+        );
+    }
+
+    private LibroDTO mapToLibroDTO(Libro libro) {
+
+        String genero = libro.getGeneroLiterario() != null
+                ? libro.getGeneroLiterario().getNombre()
+                : null;
+
+        return new LibroDTO(
+                libro.getIsbn(),
+                libro.getNombre(),
+                libro.getCodMoneda(),
+                libro.getPrecio(),
+                libro.getStock(),
+                libro.getDescripcion(),
+                libro.getFechaPublicacion(),
+                libro.getCodGeneroLiterario(),
+                genero
+        );
     }
 }

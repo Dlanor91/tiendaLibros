@@ -2,6 +2,7 @@ package gm.tienda.libros.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gm.tienda.libros.dto.AutorDTO;
+import gm.tienda.libros.dto.AutorDetalleDTO;
 import gm.tienda.libros.dto.AutorRequestDTO;
 import gm.tienda.libros.exception.GlobalExceptionHandler;
 import gm.tienda.libros.model.Autor;
@@ -204,22 +205,26 @@ class AutorControllerTest {
     // ----------------------------------------------------------
     //                 OBTENER AUTOR POR ID
     // ----------------------------------------------------------
-    /*
     @Test
     @DisplayName("GET /api/autores/{id} -> 200 autor existente")
     void obtenerAutorExistente() throws Exception {
 
-        Autor autor = new Autor();
-        autor.setId(1);
-        autor.setNombre("Gabriel");
-        autor.setApellidos("García Márquez");
+        AutorDetalleDTO dto = new AutorDetalleDTO(
+                1,
+                "Gabriel",
+                "García Márquez",
+                List.of()
+        );
 
-        when(autorService.obtenerAutorPorId(1)).thenReturn(autor);
+        when(autorService.obtenerAutorPorId(1)).thenReturn(dto);
 
         mockMvc.perform(get("/api/autores/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Gabriel"));
+                .andExpect(jsonPath("$.nombre").value("Gabriel"))
+                .andExpect(jsonPath("$.apellidos").value("García Márquez"))
+                .andExpect(jsonPath("$.id").value(1));
     }
+
 
     @Test
     @DisplayName("GET /api/autores/{id} -> 404 autor inexistente")
@@ -243,7 +248,7 @@ class AutorControllerTest {
         mockMvc.perform(get("/api/autores/1"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Error inesperado")));
-    }*/
+    }
 
     // ----------------------------------------------------------
     //                       ELIMINAR AUTOR
@@ -308,7 +313,6 @@ class AutorControllerTest {
     // ----------------------------------------------------------
     //                     BUSCAR POR NOMBRE
     // ----------------------------------------------------------
-    /*
     @Test
     @DisplayName("GET /api/autores/buscar?nombre=x -> 200 coincidencias")
     void buscarPorNombre() throws Exception {
@@ -327,5 +331,5 @@ class AutorControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].nombre").value("Gabriel"))
                 .andExpect(jsonPath("$[0].apellidos").value("García Márquez"));
-    }*/
+    }
 }

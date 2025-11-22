@@ -1,8 +1,11 @@
 package gm.tienda.libros.service;
 
 import gm.tienda.libros.dto.AutorDTO;
+import gm.tienda.libros.dto.AutorDetalleDTO;
 import gm.tienda.libros.dto.AutorRequestDTO;
 import gm.tienda.libros.model.Autor;
+import gm.tienda.libros.model.GeneroLiterario;
+import gm.tienda.libros.model.Libro;
 import gm.tienda.libros.repository.AutorRepository;
 import gm.tienda.libros.service.imp.AutorService;
 import jakarta.persistence.EntityNotFoundException;
@@ -112,22 +115,40 @@ class AutorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe obtener un autor existente por su ID")
+    @DisplayName("Debe obtener un autor existente por su ID y mapear correctamente a AutorDetalleDTO")
     void debeObtenerAutorPorId() {
+
+        // Autor con 1 libro
+        GeneroLiterario genero = new GeneroLiterario();
+        genero.setNombre("Realismo Mágico");
+
+        Libro libro = new Libro();
+        libro.setIsbn("12345");
+        libro.setNombre("Cien años de soledad");
+        libro.setGeneroLiterario(genero);
+
         Autor autor = new Autor();
         autor.setId(1);
         autor.setNombre("Isabel");
         autor.setApellidos("Allende");
+        autor.setLibros(List.of(libro));
 
         when(autorRepository.findById(1)).thenReturn(Optional.of(autor));
 
-        Autor resultado = autorService.obtenerAutorPorId(1);
+        AutorDetalleDTO resultado = autorService.obtenerAutorPorId(1);
 
+        // Assertions
         assertThat(resultado).isNotNull();
-        assertThat(resultado.getNombre()).isEqualTo("Isabel");
-        assertThat(resultado.getApellidos()).isEqualTo("Allende");
+        assertThat(resultado.id()).isEqualTo(1);
+        assertThat(resultado.nombre()).isEqualTo("Isabel");
+        assertThat(resultado.apellidos()).isEqualTo("Allende");
+
+        assertThat(resultado.libros()).hasSize(1);
+        assertThat(resultado.libros().get(0).nombre()).isEqualTo("Cien años de soledad");
+
         verify(autorRepository).findById(1);
     }
+
 
     @Test
     @DisplayName("Debe lanzar EntityNotFoundException cuando el autor no existe")
@@ -137,6 +158,30 @@ class AutorServiceTest {
         assertThatThrownBy(() -> autorService.obtenerAutorPorId(99))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("se encontró el autor");
+    }
+
+    @Test
+    @DisplayName("Debe mapear libros con género null sin lanzar excepción")
+    void debeMapearLibroConGeneroNull() {
+
+        Libro libro = new Libro();
+        libro.setIsbn("000");
+        libro.setNombre("Libro sin género");
+        libro.setGeneroLiterario(null); // ← caso que Sonar quiere que cubras
+
+        Autor autor = new Autor();
+        autor.setId(1);
+        autor.setNombre("Autor");
+        autor.setApellidos("Sin Género");
+        autor.setLibros(List.of(libro));
+
+        when(autorRepository.findById(1)).thenReturn(Optional.of(autor));
+
+        AutorDetalleDTO resultado = autorService.obtenerAutorPorId(1);
+
+        assertThat(resultado.libros()).hasSize(1);
+        assertThat(resultado.libros().get(0).nombreGeneroLiterario()).isNull(); // ← clave
+
     }
 
     // ======================================================

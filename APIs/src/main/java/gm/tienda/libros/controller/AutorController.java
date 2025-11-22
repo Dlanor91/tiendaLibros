@@ -1,6 +1,7 @@
 package gm.tienda.libros.controller;
 
 import gm.tienda.libros.dto.AutorDTO;
+import gm.tienda.libros.dto.AutorDetalleDTO;
 import gm.tienda.libros.dto.AutorRequestDTO;
 import gm.tienda.libros.model.Autor;
 import gm.tienda.libros.service.imp.AutorService;
@@ -33,6 +34,14 @@ public class AutorController {
         return ResponseEntity.ok(autores);
     }
 
+    @GetMapping("{id}")
+    public ResponseEntity<AutorDetalleDTO> getById(@PathVariable Integer id){
+        AutorDetalleDTO autorEncontrado = autorService.obtenerAutorPorId(id);
+
+        logger.info("Autor encontrado con id: {}", autorEncontrado.id());
+        return ResponseEntity.ok(autorEncontrado);
+    }
+
     @PostMapping()
     public ResponseEntity<Autor> post (@RequestBody @Valid AutorRequestDTO autor){
         Autor autorNuevo = autorService.crearAutor(autor);
@@ -56,5 +65,14 @@ public class AutorController {
 
         logger.info("Autor eliminado con id: {}", id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Autor>> getAllAutoresByNombre(@RequestParam String nombre)
+    {
+        List<Autor> autoresEncontrados = autorService.buscarAutoresNombre(nombre);
+
+        logger.info("Cantidad de autores encontrados: {} con el filtro de nombre:{} ", autoresEncontrados.size(), nombre);
+        return ResponseEntity.ok(autoresEncontrados);
     }
 }
