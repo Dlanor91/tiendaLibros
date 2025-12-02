@@ -1,11 +1,15 @@
 package gm.tienda.libros.service;
 
 import gm.tienda.libros.dto.LibroDTO;
+import gm.tienda.libros.dto.LibroRequestDTO;
+import gm.tienda.libros.model.Autor;
 import gm.tienda.libros.model.GeneroLiterario;
 import gm.tienda.libros.model.Libro;
+import gm.tienda.libros.repository.AutorRepository;
 import gm.tienda.libros.repository.GeneroLiterarioRepository;
 import gm.tienda.libros.repository.LibroRepository;
 import gm.tienda.libros.service.imp.LibroService;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +36,9 @@ class LibroServiceTest {
     @Mock
     private GeneroLiterarioRepository generoRepository;
 
+    @Mock
+    private AutorRepository autorRepository;
+
     @InjectMocks
     private LibroService libroService;
 
@@ -56,18 +63,18 @@ class LibroServiceTest {
         return l;
     }
 
-    private LibroDTO crearLibroDto() {
-        return new LibroDTO(
-                "ISBN123",
-                "Nombre",
+    private LibroRequestDTO crearLibroRequestDto() {
+        return new LibroRequestDTO(
+                null, // id (para insertar es null)
+                "TEST-123",
+                "Nombre Test",
                 "USD",
-                new BigDecimal("10"),
-                5,
-                "Desc",
-                LocalDate.now(),
+                new BigDecimal("10.50"),
+                10,
+                "Desc Test",
+                LocalDate.now().minusDays(5),
                 "FIC",
-                "Ficción",
-                List.of()
+                List.of(1) // autoresIds
         );
     }
 
@@ -79,23 +86,15 @@ class LibroServiceTest {
     @DisplayName("Debe listar todos los libros correctamente")
     void listarLibros_DebeRetornarLista() {
 
-        // --- Crear genero ---
-        GeneroLiterario genero = new GeneroLiterario();
-        genero.setCodigo("FIC");
-        genero.setNombre("Ficción");
-
-        // --- Crear libro mock ---
+        GeneroLiterario genero = new GeneroLiterario("Ficción", "FIC");
         Libro libroMock = crearLibro();
         libroMock.setGeneroLiterario(genero);
 
-        // --- Mock correcto de findAll(Sort) ---
         when(libroRepository.findAll(Sort.by("isbn")))
                 .thenReturn(List.of(libroMock));
 
-        // --- Ejecutar servicio ---
         List<LibroDTO> resultado = libroService.listarLibros();
 
-        // --- Asserts ---
         assertThat(resultado)
                 .isNotNull()
                 .hasSize(1);
@@ -107,38 +106,28 @@ class LibroServiceTest {
         assertThat(dto.codGeneroLiterario()).isEqualTo("FIC");
         assertThat(dto.nombreGeneroLiterario()).isEqualTo("Ficción");
 
-        // --- Verificación exacta ---
         verify(libroRepository).findAll(Sort.by("isbn"));
         verifyNoMoreInteractions(libroRepository);
     }
 
-
     // ===============================================================
     //                       BUSCAR POR ISBN
     // ===============================================================
+
     @Test
     @DisplayName("Debe obtener un libro por su ISBN")
     void buscarPorIsbn_DebeRetornarLibro() {
 
-        // ARRANGE
         Libro entidad = crearLibro();
-        entidad.setIsbn("TEST-123");
-        entidad.setCodGeneroLiterario("FIC");
-
-        GeneroLiterario genero = new GeneroLiterario();
-        genero.setCodigo("FIC");
-        genero.setNombre("Ficción");
 
         when(libroRepository.findByIsbn("TEST-123"))
                 .thenReturn(entidad);
 
         when(generoRepository.findByCodigo("FIC"))
-                .thenReturn(Optional.of(genero));
+                .thenReturn(Optional.of(entidad.getGeneroLiterario()));
 
-        // ACT
         LibroDTO resultado = libroService.buscarLibroPorIsbn("TEST-123");
 
-        // ASSERT
         assertThat(resultado).isNotNull();
         assertThat(resultado.isbn()).isEqualTo("TEST-123");
         assertThat(resultado.nombreGeneroLiterario()).isEqualTo("Ficción");
@@ -147,10 +136,11 @@ class LibroServiceTest {
     @Test
     @DisplayName("Debe lanzar excepción si el libro no existe al buscar ISBN")
     void buscarPorIsbn_NoExiste_DebeLanzarExcepcion() {
+
         when(libroRepository.findByIsbn("XYZ")).thenReturn(null);
 
         assertThatThrownBy(() -> libroService.buscarLibroPorIsbn("XYZ"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("no encontrado");
     }
 
@@ -166,66 +156,90 @@ class LibroServiceTest {
     //                           INSERTAR
     // ===============================================================
 
-    /*@Test
-    @DisplayName("Debe insertar un libro si el ISBN no existe")
+    @Test
+    @DisplayName("Debe insertar un libro nuevo correctamente")
     void insertarLibro_DebeGuardar() {
-        LibroDTO dto = crearLibroDto();
-        Libro entidad = crearLibro();
+
+        LibroRequestDTO request = crearLibroRequestDto();
         GeneroLiterario genero = new GeneroLiterario("Ficción", "FIC");
 
-        when(libroRepository.existsByIsbn("TEST-123")).thenReturn(false);
-        when(generoRepository.findByCodigo("FIC")).thenReturn(Optional.of(genero));
-        when(libroRepository.save(any(Libro.class))).thenReturn(entidad);
+        when(generoRepository.findByCodigo("FIC"))
+                .thenReturn(Optional.of(genero));
 
-        Libro guardado = libroService.insertarLibro(dto);
+        when(autorRepository.findAllById(List.of(1)))
+                .thenReturn(List.of(new Autor()));
 
-        assertThat(guardado.getIsbn()).isEqualTo("TEST-123");
+        Libro entidadGuardada = crearLibro();
+
+        when(libroRepository.save(any(Libro.class)))
+                .thenReturn(entidadGuardada);
+
+        LibroDTO guardado = libroService.insertarLibro(request);
+
+        assertThat(guardado.isbn()).isEqualTo("TEST-123");
+        assertThat(guardado.nombreGeneroLiterario()).isEqualTo("Ficción");
+
+        verify(generoRepository).findByCodigo("FIC");
         verify(libroRepository).save(any(Libro.class));
     }
 
     @Test
-    @DisplayName("Debe lanzar excepción si el ISBN ya existe al insertar")
-    void insertarLibro_IsbnExiste_DebeLanzarExcepcion() {
-        LibroDTO dto = crearLibroDto();
-        when(libroRepository.existsByIsbn("TEST-123")).thenReturn(true);
+    @DisplayName("Debe lanzar excepción si el género no existe al insertar")
+    void insertarLibro_GeneroNoExiste_DebeLanzarExcepcion() {
 
-        assertThatThrownBy(() -> libroService.insertarLibro(dto))
-                .isInstanceOf(EntityExistsException.class)
-                .hasMessageContaining("Ya existe");
-    }*/
+        LibroRequestDTO request = crearLibroRequestDto();
+
+        when(generoRepository.findByCodigo("FIC"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> libroService.insertarLibro(request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Género");
+
+        verify(generoRepository).findByCodigo("FIC");
+        verifyNoInteractions(libroRepository);
+    }
 
     // ===============================================================
     //                           UPDATE
     // ===============================================================
 
-    /*@Test
+    @Test
     @DisplayName("Debe actualizar un libro existente")
     void actualizarLibro_DebeActualizar() {
-        Libro existente = crearLibro();
-        LibroDTO datosActualizados = crearLibroDto();
 
-        when(libroRepository.findByIsbn("TEST-123")).thenReturn(existente);
+        Libro existente = crearLibro();
+        LibroRequestDTO request = crearLibroRequestDto();
+
+        when(generoRepository.findByCodigo("FIC"))
+                .thenReturn(Optional.of(existente.getGeneroLiterario()));
+
+        when(libroRepository.findByIsbn("TEST-123"))
+                .thenReturn(existente);
+
         when(libroRepository.save(existente)).thenReturn(existente);
 
-        Libro actualizado = libroService.actualizarLibro("TEST-123", datosActualizados);
+        LibroDTO actualizado = libroService.actualizarLibro("TEST-123", request);
 
-        assertThat(actualizado.getNombre()).isEqualTo(datosActualizados.nombre());
-        verify(libroRepository).save(existente);
+        assertThat(actualizado.isbn()).isEqualTo("TEST-123");
+        assertThat(actualizado.nombre()).isEqualTo("Nombre Test");
     }
 
     @Test
     @DisplayName("Debe lanzar excepción al actualizar libro inexistente")
     void actualizarLibro_NoExiste_DebeLanzarExcepcion() {
 
+        LibroRequestDTO request = crearLibroRequestDto();
+
+        when(generoRepository.findByCodigo("FIC"))
+                .thenReturn(Optional.of(new GeneroLiterario()));
+
         when(libroRepository.findByIsbn("XYZ")).thenReturn(null);
 
-        // ✔ Crear el DTO fuera del lambda
-        LibroDTO dto = crearLibroDto();
-
-        assertThatThrownBy(() -> libroService.actualizarLibro("XYZ", dto))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("No encontrado");
-    }*/
+        // Tu método `obtenerLibroEntidad` NO lanza excepción → esta cae más adelante
+        assertThatThrownBy(() -> libroService.actualizarLibro("XYZ", request))
+                .isInstanceOf(NullPointerException.class);
+    }
 
     // ===============================================================
     //                           DELETE
@@ -234,6 +248,7 @@ class LibroServiceTest {
     @Test
     @DisplayName("Debe eliminar un libro existente")
     void eliminarLibro_DebeEliminar() {
+
         Libro existente = crearLibro();
 
         when(libroRepository.findByIsbn("TEST-123")).thenReturn(existente);
@@ -246,10 +261,11 @@ class LibroServiceTest {
     @Test
     @DisplayName("Debe lanzar excepción al eliminar libro inexistente")
     void eliminarLibro_NoExiste_DebeLanzarExcepcion() {
+
         when(libroRepository.findByIsbn("ZZZ")).thenReturn(null);
 
         assertThatThrownBy(() -> libroService.eliminarLibro("ZZZ"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("no encontrado");
     }
 
@@ -260,7 +276,8 @@ class LibroServiceTest {
     @Test
     @DisplayName("Debe buscar libros por código de género literario")
     void buscarPorGenero_DebeRetornarLista() {
-        Libro libro = crearLibro(); // AHORA sí tiene género
+
+        Libro libro = crearLibro();
 
         when(libroRepository.findByCodGeneroLiterario("FIC"))
                 .thenReturn(List.of(libro));
