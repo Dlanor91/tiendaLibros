@@ -37,7 +37,6 @@ public class AutorService implements IAutorService {
 
     @Override
     public AutorDetalleDTO obtenerAutorPorId(Integer id) {
-
         Objects.requireNonNull(id, "El id no puede ser null");
 
         if(id <= 0){
@@ -51,10 +50,7 @@ public class AutorService implements IAutorService {
 
     @Override
     public Autor crearAutor(AutorRequestDTO autor) {
-
-        if(autor == null){
-            throw new IllegalArgumentException("El autor no puede ser null.");
-        }
+        Objects.requireNonNull(autor, "El autor no puede ser null");
 
         Autor autorNuevo = new Autor();
         autorNuevo.setNombre(autor.nombre());
@@ -65,9 +61,7 @@ public class AutorService implements IAutorService {
 
     @Override
     public Autor actualizarAutor(Integer id, AutorRequestDTO autor) {
-        if(autor == null){
-            throw new IllegalArgumentException("El autor no puede ser null");
-        }
+        Objects.requireNonNull(autor, "El autor no puede ser null");
 
         Autor autorExistente = findAutorOrThrow(id);
 
@@ -80,8 +74,10 @@ public class AutorService implements IAutorService {
 
     @Override
     public void eliminarAutor(Integer id) {
-        if(id == null || id <= 0){
-            throw new IllegalArgumentException("El id no puede ser null o menor igual a 0");
+        Objects.requireNonNull(id, "El id no puede ser null");
+
+        if(id <= 0){
+            throw new IllegalArgumentException("El id no puede ser menor igual a 0");
         }
 
         Autor autorEliminar = findAutorOrThrow(id);
@@ -91,14 +87,16 @@ public class AutorService implements IAutorService {
 
     @Override
     public List<Autor> buscarAutoresNombre(String nombre) {
-        if(nombre == null || nombre.isBlank()){
-            throw new IllegalArgumentException("El nombre no puede ser null o estar vacio");
-        }
+         validarCampo(nombre,"nombre");
 
         return autorRepository.findByNombreContainingIgnoreCaseOrderByNombre(nombre);
     }
 
     private Autor findAutorOrThrow(Integer id) {
+        if(id <= 0){
+            throw new IllegalArgumentException("El id no puede ser menor igual a 0");
+        }
+
         return autorRepository.findById(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException("No se encontró el autor con id: " + id));
@@ -125,6 +123,16 @@ public class AutorService implements IAutorService {
                 ? libro.getGeneroLiterario().getNombre()
                 : null;
 
+        List<AutorDTO> autores = libro.getAutores() != null
+                ? libro.getAutores().stream()
+                .map(a -> new AutorDTO(
+                        a.getId(),
+                        a.getNombre(),
+                        a.getApellidos()
+                ))
+                .toList()
+                : List.of();
+
         return new LibroDTO(
                 libro.getIsbn(),
                 libro.getNombre(),
@@ -134,7 +142,16 @@ public class AutorService implements IAutorService {
                 libro.getDescripcion(),
                 libro.getFechaPublicacion(),
                 libro.getCodGeneroLiterario(),
-                genero
+                genero,
+                autores
         );
+    }
+
+    private void validarCampo(String valor, String nombreCampo) {
+        Objects.requireNonNull(valor, "El campo " + nombreCampo + " no puede ser null");
+
+        if (valor.isBlank()) {
+            throw new IllegalArgumentException("El campo " + nombreCampo + " no puede estar vacío");
+        }
     }
 }

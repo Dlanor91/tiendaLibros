@@ -1,15 +1,20 @@
 package gm.tienda.libros.service;
 
-import gm.tienda.libros.model.Libro;
+import gm.tienda.libros.dto.LibroDTO;
+import gm.tienda.libros.dto.LibroRequestDTO;
 
 import java.util.List;
 
 public interface ILibroService {
-    public List<Libro> listarLibros();
+    List<LibroDTO> listarLibros();
 
-    public Libro buscarLibroPorId(Integer idLibro);
+    LibroDTO buscarLibroPorIsbn(String isbn);
 
-    public void upsertLibro(Libro libro);
+    LibroDTO  insertarLibro(LibroRequestDTO libro);
 
-    public boolean eliminarLibro(Integer idLibro);
+    LibroDTO  actualizarLibro(String isbn, LibroRequestDTO libro);
+
+    void eliminarLibro(String isbn);
+
+    List<LibroDTO> buscarLibrosCodGeneroLiterario(String codGenero);
 }

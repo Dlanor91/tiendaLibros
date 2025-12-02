@@ -45,6 +45,8 @@ public class GeneroLiterarioService implements IGeneroLiterarioService {
             throw new EntityExistsException("Ya existe ese código de género literario");
         }
 
+        generoLiterario.setCodigo(generoLiterario.getCodigo().toUpperCase());
+
         return  generoLiterarioRepository.save(generoLiterario);
     }
 

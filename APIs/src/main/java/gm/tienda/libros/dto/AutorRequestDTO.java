@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public record AutorRequestDTO(
         Integer id,
-        @NotBlank String nombre,
-        @NotBlank String apellidos
+        @NotBlank(message = "El nombre no puede estar vacío")
+        String nombre,
+        @NotBlank(message = "Los apellidos no pueden estar vacío")
+        String apellidos
 ) {}

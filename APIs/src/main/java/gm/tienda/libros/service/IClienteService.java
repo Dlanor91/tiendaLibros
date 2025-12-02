@@ -5,13 +5,13 @@ import gm.tienda.libros.model.Cliente;
 import java.util.List;
 
 public interface IClienteService {
-    public List<Cliente> listarClientes();
+    List<Cliente> listarClientes();
 
-    public Cliente obtenerClientePorId(Integer id);
+    Cliente obtenerClientePorId(Integer id);
 
-    public Cliente registrarCliente(Cliente cliente);
+    Cliente registrarCliente(Cliente cliente);
 
-    public Cliente actualizarCliente(Integer id, Cliente cliente);
+    Cliente actualizarCliente(Integer id, Cliente cliente);
 
-    public void eliminarCliente(Integer id);
+    void eliminarCliente(Integer id);
 }

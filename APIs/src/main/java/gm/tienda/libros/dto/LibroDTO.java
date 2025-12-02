@@ -2,6 +2,7 @@ package gm.tienda.libros.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public record LibroDTO(
         String isbn,
@@ -12,5 +13,6 @@ public record LibroDTO(
         String descripcion,
         LocalDate fechaPublicacion,
         String codGeneroLiterario,
-        String nombreGeneroLiterario
+        String nombreGeneroLiterario,
+        List<AutorDTO> autores
 ) {}
