@@ -27,23 +27,27 @@ src/test/java/gm/tienda_libros/
 │	└── VentaValidacionTest.java
 │	└── GeneroLiterarioValidacionTest.java
 │	└── AutorValidacionTest.java
+│	└── LibroValidacionTest.java
 │
 ├── repository/ 🧱 Integración
 │   └── ClienteRepositoryTest.java
 │   └── VentaRepositoryTest.java
 │	└── GeneroLiterarioRepositoryTest.java
 │	└── AutorRepositoryTest.java
+│	└── LibroRepositoryTest.java
 │
 ├── service/ 🧠 Unitario
 │   └── ClienteServiceTest.java
-│   └── VentaServiceTest.java      
+│   └── VentaServiceTest.java
 │   └── GeneroLiterarioServiceTest.java
-│   └── AutorServiceTest.java      
+│   └── AutorServiceTest.java
+│   └── LibroServiceTest.java
 │
 └── controller/ 🧱 Integración
     └── ClienteControllerTest.java
     └── VentaControllerTest.java
-    └── GeneroLiterarioControllerTest.java    
+    └── GeneroLiterarioControllerTest.java
 	└── AutorControllerTest.java
+	└── LibroControllerTest.java
 ```
 
