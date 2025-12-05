@@ -28,6 +28,7 @@ src/test/java/gm/tienda_libros/
 │	└── GeneroLiterarioValidacionTest.java
 │	└── AutorValidacionTest.java
 │	└── LibroValidacionTest.java
+│	└── DetalleVentasValidacionTest.java
 │
 ├── repository/ 🧱 Integración
 │   └── ClienteRepositoryTest.java
