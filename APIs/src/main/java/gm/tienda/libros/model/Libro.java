@@ -34,7 +34,7 @@ public class Libro extends BaseEntity{
     private String codMoneda;
 
     @NotNull(message = "El precio no puede estar vacío")
-    @Positive(message = "El precio debe seer mayor que 0")
+    @Positive(message = "El precio debe ser mayor que 0")
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
