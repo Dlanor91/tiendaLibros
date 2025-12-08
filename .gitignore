@@ -47,7 +47,7 @@ Thumbs.db
 **/mvnw.bat
 **/mvnw.ksh
 
-# Si querés excluir solo el binario, no el wrapper script
+# Excluir binario
 **/.mvn/wrapper/maven-wrapper.jar
 
 # EXCEPCIONES
