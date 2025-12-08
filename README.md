@@ -1,14 +1,15 @@
-# Tienda de Libos
+# Tienda de Libros
 
-Sistema que permitira la gestion y venta de libros de una libreria
+Sistema que permitira la gestion y venta de libros en una libreria
 
 ## Modelo Entidad–Relación (MER)
+
 ```text
 Cliente (1)───(N) Venta (1)───(N) DetalleVenta (N)───(1) Libro (N)───(N) Autor
                                                    │
                                                    └──(1) GeneroLiterario
 ```
-													   
+
 | Entidad              | Descripción                                                                     |
 | -------------------- | ------------------------------------------------------------------------------- |
 | **Libro**            | Contiene información de los libros disponibles (precio, stock, género, moneda). |
@@ -20,6 +21,7 @@ Cliente (1)───(N) Venta (1)───(N) DetalleVenta (N)───(1) Libro
 | **LibroAutor**       | Relación N:M entre libros y autores.                                            |
 
 ## Test
+
 ```text
 src/test/java/gm/tienda_libros/
 ├── validation/ 🧠 Unitario
@@ -51,4 +53,3 @@ src/test/java/gm/tienda_libros/
 	└── AutorControllerTest.java
 	└── LibroControllerTest.java
 ```
-
