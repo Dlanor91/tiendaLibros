@@ -17,4 +17,6 @@ public interface ILibroService {
     void eliminarLibro(String isbn);
 
     List<LibroDTO> buscarLibrosCodGeneroLiterario(String codGenero);
+
+    void rebajarStock(String isbn, Integer cantidad);
 }

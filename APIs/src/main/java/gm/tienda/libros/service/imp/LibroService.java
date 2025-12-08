@@ -170,6 +170,16 @@ public class LibroService implements ILibroService {
                 .toList();
     }
 
+    @Override
+    public void rebajarStock(String isbn, Integer cantidad) {
+
+        Libro libro = obtenerLibroEntidad(isbn);
+
+        libro.setStock(libro.getStock()-cantidad);
+
+        libroRepository.save(libro);
+    }
+
     private Libro obtenerLibroEntidad(String isbn) {
         validarCampo(isbn, "isbn");
         return libroRepository.findByIsbn(isbn);
