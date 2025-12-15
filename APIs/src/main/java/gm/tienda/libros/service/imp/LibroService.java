@@ -175,6 +175,10 @@ public class LibroService implements ILibroService {
 
         Libro libro = obtenerLibroEntidad(isbn);
 
+        if (libro.getStock() < cantidad) {
+            throw new IllegalStateException("Stock insuficiente");
+        }
+
         libro.setStock(libro.getStock()-cantidad);
 
         libroRepository.save(libro);
