@@ -1,8 +1,8 @@
 package gm.tienda.libros.scheduler;
 
+import gm.tienda.libros.config.MsVentasProperties;
 import gm.tienda.libros.dto.VentaMLDTO;
 import gm.tienda.libros.service.imp.LibroService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,17 +14,18 @@ import java.util.Arrays;
 public class VentaPollingScheduler {
     private final RestTemplate restTemplate;
     private final LibroService libroService;
+    private final MsVentasProperties props;
 
-    public VentaPollingScheduler(RestTemplate restTemplate, LibroService libroService) {
+    public VentaPollingScheduler(RestTemplate restTemplate, LibroService libroService, MsVentasProperties props) {
         this.restTemplate = restTemplate;
         this.libroService = libroService;
+        this.props = props;
     }
-
-    @Value("${ms-ventas.url}")
-    private String ventasServiceUrl;
 
     @Scheduled(cron = "0 */1 * * * *")
     public void procesarVentas() {
+
+        String ventasServiceUrl = props.getUrl();
 
         VentaMLDTO[] ventas = restTemplate.getForObject(ventasServiceUrl + "/sinProcesar", VentaMLDTO[].class);
 
